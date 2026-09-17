@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>صفحة المادة | حَصاد</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html" style="color:#ead9a0">
+        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="">
+        حَصاد
+      </a>
+      <nav class="side-nav">
+        <a href="dashboard.html">لوحة المواد</a>
+        <a href="subject.html?id=math">الرياضيات</a>
+        <a href="subject.html?id=islamic">التربية الإسلامية</a>
+        <a href="subject.html?id=arabic">اللغة العربية</a>
+        <a href="subject.html?id=science">العلوم</a>
+        <a href="#" onclick="Hassad.logout()">تسجيل الخروج</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="subject-title">المادة</h1>
+          <p id="subject-teacher" style="color:var(--muted)"></p>
+        </div>
+        <a class="btn-outline" href="dashboard.html">كل المواد</a>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="Hassad.switchTab('live', this)">البث المباشر</button>
+        <button class="tab" onclick="Hassad.switchTab('lessons', this)">الدروس المسجّلة</button>
+        <button class="tab" onclick="Hassad.switchTab('hw', this)">الواجبات</button>
+        <button class="tab" onclick="Hassad.switchTab('files', this)">الملفات</button>
+      </div>
+      <section id="panel-live" class="panel active">
+        <p id="live-meta" style="margin-bottom:12px;color:var(--muted)"></p>
+        <div class="player" id="player"></div>
+      </section>
+      <section id="panel-lessons" class="panel"><div class="card"><div class="list" id="lessons"></div></div></section>
+      <section id="panel-hw" class="panel"><div class="card"><div class="list" id="hw"></div></div></section>
+      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملخص الدرس.pdf</strong></div><button class="btn-outline" onclick="Hassad.toast('رابط تجريبي')">تحميل</button></div></div></section>
+    </main>
+  </div>
+  <script src="js/app.js"></script>
+  <script>Hassad.renderSubject();</script>
+</body>
+</html>

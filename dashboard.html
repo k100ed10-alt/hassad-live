@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الطالب | حَصاد</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html" style="color:#ead9a0">
+        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="">
+        حَصاد
+      </a>
+      <nav class="side-nav">
+        <a class="active" href="dashboard.html">لوحة المواد</a>
+        <a href="subject.html?id=math">الرياضيات</a>
+        <a href="subject.html?id=islamic">التربية الإسلامية</a>
+        <a href="subject.html?id=arabic">اللغة العربية</a>
+        <a href="subject.html?id=science">العلوم</a>
+        <a href="#" onclick="Hassad.logout()">تسجيل الخروج</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="welcome">مرحباً</h1>
+          <p style="color:var(--muted)">هذه لوحة الطالب: المواد، الحصص القادمة، والواجبات الجديدة.</p>
+        </div>
+        <div class="user-chip">
+          <div class="avatar">ط</div>
+          <div>
+            <strong>حساب طالب</strong>
+            <div style="font-size:12px;color:var(--muted)">اشتراك كامل نشط</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-4" id="subject-grid"></div>
+      <div class="grid-2" style="margin-top:18px">
+        <section class="card">
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">الواجبات المطلوبة</h3>
+          <div class="list" id="assignment-list"></div>
+        </section>
+        <section class="card">
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">إشعارات اليوم</h3>
+          <div class="list">
+            <div class="row"><div>تم رفع ورقة عمل العلوم</div><span class="badge badge-live">جديد</span></div>
+            <div class="row"><div>حصة الرياضيات مساء اليوم</div><span class="badge badge-soon">اليوم</span></div>
+            <div class="row"><div>رابط بث العربية سيُحدَّث قبل الحصة</div><span class="badge badge-wait">مجدول</span></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="js/app.js"></script>
+  <script>Hassad.renderDashboard();</script>
+</body>
+</html>

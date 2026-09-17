@@ -46,21 +46,25 @@
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
           <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب من صورة</h3>
+          <div class="field">
+            <label>مفتاح xAI (مرة واحدة)</label>
+            <input id="xai-key" type="password" dir="ltr" placeholder="xai-...">
+            <button type="button" class="ghost-btn" style="margin-top:8px" onclick="Hassad.saveKey()">حفظ المفتاح</button>
+          </div>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
           <div class="field">
-            <label>صورة ورقة العمل / الأسئلة</label>
+            <label>صورة ورقة العمل</label>
             <input id="hw-image" type="file" accept="image/*">
             <img id="hw-preview" alt="" style="margin-top:8px;max-height:180px;border-radius:12px;display:none">
           </div>
+          <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة إلى نشاط</button>
+          <p class="hint" id="convert-msg"></p>
           <div class="field">
-            <label>الأسئلة المستخرجة (أو اكتبها يدوياً بعلامة *)</label>
-            <textarea id="hw-questions" rows="8" placeholder="س: ...
-أ) ...
-ب) ... *"></textarea>
+            <label>الأسئلة بعد التحويل (راجع ثم انشر)</label>
+            <textarea id="hw-questions" rows="8" placeholder="س: ...\nأ) ...\nب) ... *"></textarea>
           </div>
-          <p class="hint">أرفق الصورة هنا ليراها الطالب. لتحويل الصورة إلى أسئلة: أرسل الصورة في المحادثة مع جروك وسأضع الأسئلة جاهزة.</p>
           <button class="btn btn-gold">نشر النشاط</button>
         </form>
       </div>
@@ -71,8 +75,11 @@
   </div>
   <script src="js/app.js"></script>
   <script src="js/quiz.js"></script>
+  <script src="js/vision.js"></script>
   <script>
     Hassad.renderAdmin();
+    const saved=localStorage.getItem("hassad-xai-key");
+    if(saved) document.getElementById("xai-key").value=saved;
     document.getElementById("hw-image").addEventListener("change", function(){
       const f=this.files[0]; const img=document.getElementById("hw-preview");
       if(!f){img.style.display="none"; return;}

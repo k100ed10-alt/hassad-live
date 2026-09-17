@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة المعلم | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -22,18 +22,15 @@
     </aside>
     <main class="main">
       <div class="topbar"><div><h1>لوحة المعلم</h1></div></div>
-
       <section class="card" style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
         <h3 style="color:#7a4e00;margin-bottom:8px">حذف المحتوى التجريبي</h3>
-        <p class="hint" style="margin-bottom:10px">يوسف؁ ليان؁ حمد والحصص والواجبات الوهمية محفوظة في هذا المتصفح فقط.</p>
         <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل الطلاب والحصص والواجبات</button>
       </section>
-
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء حساب طالب</h3>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="st-name" required></div>
-          <div class="field"><label>الصف</label><input id="st-grade" required></div>
+          <div class="field"><label>الصف</label><select id="st-grade" required></select></div>
           <div class="field"><label>البريد</label><input id="st-email" type="email" required></div>
           <div class="field"><label>كلمة المرور</label><input id="st-pass" required minlength="6"></div>
         </div>
@@ -43,8 +40,9 @@
       </form>
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصة</h3>
+          <h3>الحصة</h3>
           <div class="field"><label>المادة</label><select id="live-form-subject"></select></div>
+          <div class="field"><label>الصف</label><select id="live-grade"></select></div>
           <div class="field"><label>العنوان</label><input id="live-title" required></div>
           <div class="field"><label>التاريخ</label><input id="live-date" type="date" required></div>
           <div class="field"><label>الوقت</label><input id="live-hour" type="time" required></div>
@@ -52,16 +50,17 @@
           <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب من صورة</h3>
-          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
+          <h3>واجب من صورة</h3>
+          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr"></div>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
+          <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
           <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <div class="field"><label>صورة ورقة العمل</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" alt="" style="margin-top:8px;max-height:180px;border-radius:12px;display:none"></div>
-          <button type="button" class="btn" onclick="Hassad.convertImage()">حؤل الصورة إلى نشاط</button>
+          <div class="field"><label>الصورة</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" style="margin-top:8px;max-height:180px;border-radius:12px;display:none"></div>
+          <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة</button>
           <p class="hint" id="convert-msg"></p>
           <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="8"></textarea></div>
-          <button class="btn btn-gold">نشر النشاط</button>
+          <button class="btn btn-gold">نشر</button>
         </form>
       </div>
       <section class="card" style="margin-top:16px"><h3>الطلاب</h3><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table></section>
@@ -69,28 +68,27 @@
       <section class="card" style="margin-top:16px"><h3>الواجبات</h3><div class="list" id="admin-hw"></div></section>
     </main>
   </div>
-  <script src="js/app.js?v=3"></script>
-  <script src="js/quiz.js?v=3"></script>
-  <script src="js/vision.js?v=3"></script>
-  <script src="js/admin-delete.js?v=3"></script>
+  <script src="js/app.js?v=4"></script>
+  <script src="js/quiz.js?v=4"></script>
+  <script src="js/vision.js?v=4"></script>
+  <script src="js/admin-delete.js?v=4"></script>
+  <script src="js/grade-filter.js?v=4"></script>
   <script>
     function clearHassadData(){
-      if(!confirm("مسح كل الطلاب والحصص والواجبات من هذا الجهاز؟")) return;
-      const raw=localStorage.getItem("hassad-db");
-      const data=raw?JSON.parse(raw):{};
-      data.students={}; data.assignments=[]; data.live_sessions=[]; data.lessons=[]; data.submissions={};
+      if(!confirm("مسح كل البيانات من هذا الجهاز؟")) return;
+      const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
+      data.students={};data.assignments=[];data.live_sessions=[];data.lessons=[];data.submissions={};
       localStorage.setItem("hassad-db",JSON.stringify(data));
-      alert("تم المسح. أضف طلابك الحقيقيين من النموذج أعلاه.");
       location.reload();
     }
     Hassad.renderAdmin();
+    if(typeof fillGradeSelects==="function") fillGradeSelects();
     const saved=localStorage.getItem("hassad-xai-key");
     if(saved) document.getElementById("xai-key").value=saved;
-    document.getElementById("hw-image").addEventListener("change", function(){
-      const f=this.files[0]; const img=document.getElementById("hw-preview");
-      if(!f){img.style.display="none"; return;}
-      const r=new FileReader(); r.onload=()=>{img.src=r.result; img.style.display="block";};
-      r.readAsDataURL(f);
+    document.getElementById("hw-image").addEventListener("change",function(){
+      const f=this.files[0],img=document.getElementById("hw-preview");
+      if(!f){img.style.display="none";return;}
+      const r=new FileReader(); r.onload=()=>{img.src=r.result;img.style.display="block"}; r.readAsDataURL(f);
     });
   </script>
 </body>

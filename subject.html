@@ -6,6 +6,7 @@
   <title>صفحة المادة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/student.css" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -15,13 +16,13 @@
         <img src="assets/logo.svg" alt="حَصاد" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px">
         حَصاد
       </a>
-      <nav class="side-nav">
-        <a href="dashboard.html">لوحة المواد</a>
-        <a href="subject.html?id=math">الرياضيات</a>
-        <a href="subject.html?id=islamic">التربية الإسلامية</a>
-        <a href="subject.html?id=arabic">اللغة العربية</a>
-        <a href="subject.html?id=science">العلوم</a>
-        <a href="#" onclick="Hassad.logout()">تسجيل الخروج</a>
+      <nav class="side-nav" id="side-nav">
+        <a href="dashboard.html"><span>🏠 لوحة المواد</span></a>
+        <a href="subject.html?id=math" data-sub="math"><span>📐 الرياضيات</span><span class="count-dot" hidden>0</span></a>
+        <a href="subject.html?id=islamic" data-sub="islamic"><span>📖 التربية الإسلامية</span><span class="count-dot" hidden>0</span></a>
+        <a href="subject.html?id=arabic" data-sub="arabic"><span>✍️ اللغة العربية</span><span class="count-dot" hidden>0</span></a>
+        <a href="subject.html?id=science" data-sub="science"><span>🔬 العلوم</span><span class="count-dot" hidden>0</span></a>
+        <a href="#" onclick="Hassad.logout()"><span>🚪 تسجيل الخروج</span></a>
       </nav>
     </aside>
     <main class="main">
@@ -33,28 +34,24 @@
         <a class="btn" href="dashboard.html">كل المواد</a>
       </div>
       <div class="tabs">
-        <button class="tab active" onclick="Hassad.switchTab('live', this)">البث المباشر</button>
-        <button class="tab" onclick="Hassad.switchTab('lessons', this)">الدروس</button>
-        <button class="tab" onclick="Hassad.switchTab('hw', this)">الواجبات</button>
-        <button class="tab" onclick="Hassad.switchTab('files', this)">الملفات</button>
+        <button class="tab active" onclick="Hassad.switchTab('live', this)">📺 البث المباشر</button>
+        <button class="tab" onclick="Hassad.switchTab('lessons', this)">▶️ الدروس المسجّلة</button>
+        <button class="tab" onclick="Hassad.switchTab('hw', this)">📝 الواجبات</button>
+        <button class="tab" onclick="Hassad.switchTab('files', this)">📁 الملفات</button>
       </div>
       <section id="panel-live" class="panel active">
         <p id="live-meta" style="margin-bottom:12px;color:var(--muted)"></p>
         <div class="player" id="player">
-          <div class="player-empty">
-            <div>
-              <h3>لا يوجد بث الآن</h3>
-              <p>عندما ينشر المعلم رابط الحصة من لوحة الإدارة يظهر الفيديو هنا.</p>
-            </div>
-          </div>
+          <div class="player-empty"><div><h3>لا يوجد بث الآن</h3><p>عندما ينشر المعلم الرابط يظهر الفيديو هنا.</p></div></div>
         </div>
       </section>
       <section id="panel-lessons" class="panel"><div class="card"><div class="list" id="lessons"></div></div></section>
       <section id="panel-hw" class="panel"><div class="card"><div class="list" id="hw"></div></div></section>
-      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملفات الدرس</strong></div></div></div></section>
+      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>📄 ملفات الدرس</strong></div></div></div></section>
     </main>
   </div>
   <script src="js/app.js"></script>
+  <script src="js/student-ui.js"></script>
   <script>Hassad.renderSubject();</script>
 </body>
 </html>

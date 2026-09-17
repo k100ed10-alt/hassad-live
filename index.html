@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الطالب - حَصاد</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary-color:#2563eb;--bg-color:#f8fafc;--card-bg:#fff;--text-main:#1e293b;--text-muted:#64748b;--border-color:#e2e8f0}
+body{font-family:Cairo,sans-serif;background:var(--bg-color);color:var(--text-main);margin:0;line-height:1.6}
+header{background:#fff;padding:1rem 2rem;box-shadow:0 1px 3px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+header h2{margin:0;color:#2563eb}
+.container{max-width:1200px;margin:2rem auto;padding:0 1rem;display:grid;grid-template-columns:2fr 1fr;gap:2rem}
+@media(max-width:768px){.container{grid-template-columns:1fr}}
+.section-title{font-size:1.25rem;color:#2563eb;border-bottom:2px solid #2563eb;padding-bottom:.5rem;display:inline-block}
+.live-section{background:#fff;border-radius:8px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.assignment-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:1.25rem}
+.video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000;margin-top:1rem}
+.video-container iframe,.empty{position:absolute;top:0;right:0;width:100%;height:100%;border:0}
+.empty{display:flex;align-items:center;justify-content:center;color:#cbd5e1;text-align:center;background:#0f172a}
+.stream-row{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.stream-row input{flex:1;min-width:180px;border:1px solid #e2e8f0;border-radius:4px;padding:.55rem .75rem;font-family:inherit}
+.btn{background:#2563eb;color:#fff;border:0;border-radius:4px;padding:.5rem 1rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%}
+.btn.ghost{background:#e2e8f0;color:#1e293b}
+.toast{position:fixed;bottom:16px;left:16px;background:#1e293b;color:#fff;padding:10px 14px;border-radius:8px;display:none}
+</style>
+</head>
+<body>
+<header>
+<h2>منصة حَصاد</h2>
+<div>أهلاً بك، أحمد · الرياضيات</div>
+</header>
+<div class="container">
+<main class="live-section">
+<h3 class="section-title">حصة الرياضيات المباشرة</h3>
+<p>درس اليوم: العمليات على الكسور الجبرية (يبدأ الساعة ٤:٠٠ مساءً)</p>
+<div class="video-container" id="player"><div class="empty">سيظهر البث هنا بعد وضع رابط يوتيوب غير المدرج</div></div>
+<div class="stream-row">
+<input id="embed" placeholder="https://www.youtube.com/embed/XXXX">
+<button class="btn" style="width:auto" onclick="showStream()">عرض الحصة</button>
+</div>
+</main>
+<aside id="hw"></aside>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const assignments=[{id:"a1",title:"واجب الأعداد الصحيحة",date:"تاريخ النشر: 15 سبتمبر 2026",text:"حل التمارين التفاعلية لجمع وطرح الأعداد الصحيحة باستخدام شجرة العوامل.",open:true},{id:"a2",title:"تطبيقات هندسية",date:"تاريخ النشر: 10 سبتمبر 2026",text:"إثبات نظريات تطابق المثلثات وإيجاد مساحة مقاطع الدائرة.",open:true}];
+function toast(m){const e=document.getElementById("toast");e.textContent=m;e.style.display="block";setTimeout(()=>e.style.display="none",1800)}
+function renderHw(){document.getElementById("hw").innerHTML='<h3 class="section-title">أحدث الواجبات</h3>'+assignments.map(a=>'<div class="assignment-card"><h4>'+a.title+'</h4><div class="assignment-meta">'+a.date+'</div><p>'+a.text+'</p><button class="btn" onclick="openHw(\''+a.id+'\')">فتح الواجب</button></div>').join('')}
+function openHw(id){toast("تم فتح الواجب")}
+function showStream(){const u=document.getElementById("embed").value.trim();if(!u){toast("ضع رابط التضمين أولاً");return}document.getElementById("player").innerHTML='<iframe src="'+u+'" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';toast("ظهر البث")}
+renderHw();
+</script>
+</body>
+</html>

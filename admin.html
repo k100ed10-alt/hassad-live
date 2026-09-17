@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة المعلم | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -21,10 +21,14 @@
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar">
-        <div><h1>لوحة المعلم</h1></div>
-        <button type="button" class="btn-outline" onclick="Hassad.clearAllContent()">مسح كل البيانات التجريبية</button>
-      </div>
+      <div class="topbar"><div><h1>لوحة المعلم</h1></div></div>
+
+      <section class="card" style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
+        <h3 style="color:#7a4e00;margin-bottom:8px">حذف المحتوى التجريبي</h3>
+        <p class="hint" style="margin-bottom:10px">يوسف؁ ليان؁ حمد والحصص والواجبات الوهمية محفوظة في هذا المتصفح فقط.</p>
+        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل الطلاب والحصص والواجبات</button>
+      </section>
+
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء حساب طالب</h3>
         <div class="grid-2">
@@ -49,20 +53,12 @@
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
           <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب من صورة</h3>
-          <div class="field">
-            <label>مفتاح xAI</label>
-            <input id="xai-key" type="password" dir="ltr" placeholder="xai-...">
-            <button type="button" class="ghost-btn" style="margin-top:8px" onclick="Hassad.saveKey()">حفظ المفتاح</button>
-          </div>
+          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <div class="field">
-            <label>صورة ورقة العمل</label>
-            <input id="hw-image" type="file" accept="image/*">
-            <img id="hw-preview" alt="" style="margin-top:8px;max-height:180px;border-radius:12px;display:none">
-          </div>
-          <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة إلى نشاط</button>
+          <div class="field"><label>صورة ورقة العمل</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" alt="" style="margin-top:8px;max-height:180px;border-radius:12px;display:none"></div>
+          <button type="button" class="btn" onclick="Hassad.convertImage()">حؤل الصورة إلى نشاط</button>
           <p class="hint" id="convert-msg"></p>
           <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="8"></textarea></div>
           <button class="btn btn-gold">نشر النشاط</button>
@@ -73,11 +69,20 @@
       <section class="card" style="margin-top:16px"><h3>الواجبات</h3><div class="list" id="admin-hw"></div></section>
     </main>
   </div>
-  <script src="js/app.js"></script>
-  <script src="js/quiz.js"></script>
-  <script src="js/vision.js"></script>
-  <script src="js/admin-delete.js"></script>
+  <script src="js/app.js?v=3"></script>
+  <script src="js/quiz.js?v=3"></script>
+  <script src="js/vision.js?v=3"></script>
+  <script src="js/admin-delete.js?v=3"></script>
   <script>
+    function clearHassadData(){
+      if(!confirm("مسح كل الطلاب والحصص والواجبات من هذا الجهاز؟")) return;
+      const raw=localStorage.getItem("hassad-db");
+      const data=raw?JSON.parse(raw):{};
+      data.students={}; data.assignments=[]; data.live_sessions=[]; data.lessons=[]; data.submissions={};
+      localStorage.setItem("hassad-db",JSON.stringify(data));
+      alert("تم المسح. أضف طلابك الحقيقيين من النموذج أعلاه.");
+      location.reload();
+    }
     Hassad.renderAdmin();
     const saved=localStorage.getItem("hassad-xai-key");
     if(saved) document.getElementById("xai-key").value=saved;

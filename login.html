@@ -6,20 +6,21 @@
   <title>تسجيل الدخول | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <nav class="nav">
     <div class="container nav-inner">
       <a class="brand" href="index.html">
-        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="حَصاد">
+        <img src="assets/logo.svg" alt="حَصاد" style="width:46px;height:58px;object-fit:contain;border:0;border-radius:0;background:#fff">
         <span>منصة حَصاد</span>
       </a>
-      <a class="ghost-btn" href="index.html">العودة للرئيسية</a>
+      <a class="ghost-btn" href="index.html">الرئيسية</a>
     </div>
   </nav>
   <div class="auth-wrap">
     <form class="auth-card" onsubmit="Hassad.loginHandler(event)">
-      <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="" style="width:64px;height:64px;border-radius:18px;border:2px solid var(--gold-500)">
+      <img src="assets/logo.svg" alt="حَصاد" style="width:88px;height:112px;object-fit:contain;margin:0 auto 8px">
       <h1 id="login-title">دخول الطالب</h1>
       <p id="login-sub" style="color:var(--muted);margin-bottom:18px">اكتب البريد وكلمة المرور الخاصة.</p>
       <div class="field">
@@ -42,10 +43,9 @@
       if (as === "teacher") {
         localStorage.removeItem("hassad-user");
         document.getElementById("login-title").textContent = "دخول المعلم";
-        document.getElementById("login-sub").textContent = "ادخل بحساب المعلم لإنشاء الطلاب ونشر الحصص.";
+        document.getElementById("login-sub").textContent = "حساب الإدارة فقط.";
         document.getElementById("email").value = "teacher@hassad.om";
         document.getElementById("password").value = "Teacher#1";
-        document.getElementById("login-hint").textContent = "حساب المعلم جاهز. اضغط دخول.";
       }
     })();
   </script>

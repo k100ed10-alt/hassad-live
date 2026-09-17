@@ -6,12 +6,13 @@
   <title>صفحة المادة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="dashboard.html" style="color:#ead9a0">
-        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="">
+        <img src="assets/logo.svg" alt="حَصاد" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px">
         حَصاد
       </a>
       <nav class="side-nav">
@@ -29,21 +30,28 @@
           <h1 id="subject-title">المادة</h1>
           <p id="subject-teacher" style="color:var(--muted)"></p>
         </div>
-        <a class="btn-outline" href="dashboard.html">كل المواد</a>
+        <a class="btn" href="dashboard.html">كل المواد</a>
       </div>
       <div class="tabs">
         <button class="tab active" onclick="Hassad.switchTab('live', this)">البث المباشر</button>
-        <button class="tab" onclick="Hassad.switchTab('lessons', this)">الدروس المسجّلة</button>
+        <button class="tab" onclick="Hassad.switchTab('lessons', this)">الدروس</button>
         <button class="tab" onclick="Hassad.switchTab('hw', this)">الواجبات</button>
         <button class="tab" onclick="Hassad.switchTab('files', this)">الملفات</button>
       </div>
       <section id="panel-live" class="panel active">
         <p id="live-meta" style="margin-bottom:12px;color:var(--muted)"></p>
-        <div class="player" id="player"></div>
+        <div class="player" id="player">
+          <div class="player-empty">
+            <div>
+              <h3>لا يوجد بث الآن</h3>
+              <p>عندما ينشر المعلم رابط الحصة من لوحة الإدارة يظهر الفيديو هنا.</p>
+            </div>
+          </div>
+        </div>
       </section>
       <section id="panel-lessons" class="panel"><div class="card"><div class="list" id="lessons"></div></div></section>
       <section id="panel-hw" class="panel"><div class="card"><div class="list" id="hw"></div></div></section>
-      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملخص الدرس.pdf</strong></div><button class="btn-outline" onclick="Hassad.toast('رابط تجريبي')">تحميل</button></div></div></section>
+      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملفات الدرس</strong></div></div></div></section>
     </main>
   </div>
   <script src="js/app.js"></script>

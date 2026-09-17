@@ -21,7 +21,10 @@
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar"><div><h1>لوحة المعلم</h1></div></div>
+      <div class="topbar">
+        <div><h1>لوحة المعلم</h1></div>
+        <button type="button" class="btn-outline" onclick="Hassad.clearAllContent()">مسح كل البيانات التجريبية</button>
+      </div>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء حساب طالب</h3>
         <div class="grid-2">
@@ -47,7 +50,7 @@
         <form class="card" onsubmit="Hassad.saveHw(event)">
           <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب من صورة</h3>
           <div class="field">
-            <label>مفتاح xAI (مرة واحدة)</label>
+            <label>مفتاح xAI</label>
             <input id="xai-key" type="password" dir="ltr" placeholder="xai-...">
             <button type="button" class="ghost-btn" style="margin-top:8px" onclick="Hassad.saveKey()">حفظ المفتاح</button>
           </div>
@@ -61,21 +64,19 @@
           </div>
           <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة إلى نشاط</button>
           <p class="hint" id="convert-msg"></p>
-          <div class="field">
-            <label>الأسئلة بعد التحويل (راجع ثم انشر)</label>
-            <textarea id="hw-questions" rows="8" placeholder="س: ...\nأ) ...\nب) ... *"></textarea>
-          </div>
+          <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="8"></textarea></div>
           <button class="btn btn-gold">نشر النشاط</button>
         </form>
       </div>
       <section class="card" style="margin-top:16px"><h3>الطلاب</h3><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table></section>
-      <section class="card" style="margin-top:16px"><h3>الحصص</h3><table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table></section>
+      <section class="card" style="margin-top:16px"><h3>الحصص</h3><table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th><th></th></tr></thead><tbody id="live-table"></tbody></table></section>
       <section class="card" style="margin-top:16px"><h3>الواجبات</h3><div class="list" id="admin-hw"></div></section>
     </main>
   </div>
   <script src="js/app.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/vision.js"></script>
+  <script src="js/admin-delete.js"></script>
   <script>
     Hassad.renderAdmin();
     const saved=localStorage.getItem("hassad-xai-key");

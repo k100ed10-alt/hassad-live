@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>صفحة المادة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/student.css" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/student.css?v=4" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -16,12 +16,12 @@
         <img src="assets/logo.svg" alt="حَصاد" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px">
         حَصاد
       </a>
-      <nav class="side-nav" id="side-nav">
+      <nav class="side-nav">
         <a href="dashboard.html"><span>لوحة المواد</span></a>
-        <a href="subject.html?id=math" data-sub="math"><span>الرياضيات</span></a>
-        <a href="subject.html?id=islamic" data-sub="islamic"><span>التربية الإسلامية</span></a>
-        <a href="subject.html?id=arabic" data-sub="arabic"><span>اللغة العربية</span></a>
-        <a href="subject.html?id=science" data-sub="science"><span>العلوم</span></a>
+        <a href="subject.html?id=math"><span>الرياضيات</span></a>
+        <a href="subject.html?id=islamic"><span>التربية الإسلامية</span></a>
+        <a href="subject.html?id=arabic"><span>اللغة العربية</span></a>
+        <a href="subject.html?id=science"><span>العلوم</span></a>
         <a href="#" onclick="Hassad.logout()"><span>خروج</span></a>
       </nav>
     </aside>
@@ -41,9 +41,7 @@
       </div>
       <section id="panel-live" class="panel active">
         <p id="live-meta" style="margin-bottom:12px;color:var(--muted)"></p>
-        <div class="player" id="player">
-          <div class="player-empty"><div><h3>لا يوجد بث الآن</h3><p>عندما ينشر المعلم الرابط يظهر الفيديو هنا.</p></div></div>
-        </div>
+        <div class="player" id="player"><div class="player-empty"><div><h3>لا يوجد بث الآن</h3></div></div></div>
       </section>
       <section id="panel-lessons" class="panel"><div class="card"><div class="list" id="lessons"></div></div></section>
       <section id="panel-hw" class="panel">
@@ -53,9 +51,10 @@
       <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملفات الدرس</strong></div></div></div></section>
     </main>
   </div>
-  <script src="js/app.js"></script>
-  <script src="js/student-ui.js"></script>
-  <script src="js/quiz.js"></script>
+  <script src="js/app.js?v=4"></script>
+  <script src="js/student-ui.js?v=4"></script>
+  <script src="js/quiz.js?v=4"></script>
+  <script src="js/grade-filter.js?v=4"></script>
   <script>Hassad.renderSubject();</script>
 </body>
 </html>

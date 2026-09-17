@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة المعلم | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
   <link rel="icon" href="assets/logo.svg">
+  <style>
+    input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
+    .del-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .del-bar .btn{background:#b42318;color:#fff}
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -21,9 +26,9 @@
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar"><div><h1>لوحة المعلم</h1></div></div>
+      <div class="topbar"><h1>لوحة المعلم</h1></div>
       <section class="card" style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
-        <h3 style="color:#7a4e00;margin-bottom:8px">حذف المحتوى التجريبي</h3>
+        <h3 style="color:#7a4e00;margin-bottom:8px">مسح الكل</h3>
         <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل الطلاب والحصص والواجبات</button>
       </section>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
@@ -63,19 +68,46 @@
           <button class="btn btn-gold">نشر</button>
         </form>
       </div>
-      <section class="card" style="margin-top:16px"><h3>الطلاب</h3><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table></section>
-      <section class="card" style="margin-top:16px"><h3>الحصص</h3><table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th><th></th></tr></thead><tbody id="live-table"></tbody></table></section>
-      <section class="card" style="margin-top:16px"><h3>الواجبات</h3><div class="list" id="admin-hw"></div></section>
+
+      <section class="card" style="margin-top:16px">
+        <div class="del-bar">
+          <h3>الطلاب</h3>
+          <button type="button" class="btn" onclick="Hassad.deleteSelected('student')">حذف المحدد</button>
+        </div>
+        <table class="table"><thead><tr>
+          <th><input type="checkbox" onclick="Hassad.toggleAll('student',this)"></th>
+          <th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th>
+        </tr></thead><tbody id="students"></tbody></table>
+      </section>
+
+      <section class="card" style="margin-top:16px">
+        <div class="del-bar">
+          <h3>الحصص</h3>
+          <button type="button" class="btn" onclick="Hassad.deleteSelected('live')">حذف المحدد</button>
+        </div>
+        <table class="table"><thead><tr>
+          <th><input type="checkbox" onclick="Hassad.toggleAll('live',this)"></th>
+          <th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th>
+        </tr></thead><tbody id="live-table"></tbody></table>
+      </section>
+
+      <section class="card" style="margin-top:16px">
+        <div class="del-bar">
+          <h3>الواجبات</h3>
+          <button type="button" class="btn" onclick="Hassad.deleteSelected('hw')">حذف المحدد</button>
+        </div>
+        <div class="list" id="admin-hw"></div>
+      </section>
     </main>
   </div>
-  <script src="js/app.js?v=4"></script>
-  <script src="js/quiz.js?v=4"></script>
-  <script src="js/vision.js?v=4"></script>
-  <script src="js/admin-delete.js?v=4"></script>
-  <script src="js/grade-filter.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
+  <script src="js/quiz.js?v=5"></script>
+  <script src="js/vision.js?v=5"></script>
+  <script src="js/admin-delete.js?v=5"></script>
+  <script src="js/grade-filter.js?v=5"></script>
   <script>
     function clearHassadData(){
-      if(!confirm("مسح كل البيانات من هذا الجهاز؟")) return;
+      if(!confirm("مسح الكل من هذا الجهاز؟")) return;
       const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
       data.students={};data.assignments=[];data.live_sessions=[];data.lessons=[];data.submissions={};
       localStorage.setItem("hassad-db",JSON.stringify(data));

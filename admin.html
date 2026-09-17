@@ -21,71 +21,64 @@
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar">
-        <div>
-          <h1>لوحة المعلم</h1>
-          <p style="color:var(--muted)">أنشئ الطلاب والحصص والواجبات التفاعلية.</p>
-        </div>
-      </div>
+      <div class="topbar"><div><h1>لوحة المعلم</h1></div></div>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء حساب طالب</h3>
         <div class="grid-2">
-          <div class="field"><label>اسم الطالب</label><input id="st-name" required></div>
+          <div class="field"><label>الاسم</label><input id="st-name" required></div>
           <div class="field"><label>الصف</label><input id="st-grade" required></div>
-          <div class="field"><label>البريد الإلكتروني</label><input id="st-email" type="email" required></div>
+          <div class="field"><label>البريد</label><input id="st-email" type="email" required></div>
           <div class="field"><label>كلمة المرور</label><input id="st-pass" required minlength="6"></div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn-outline" onclick="document.getElementById('st-pass').value=Hassad.genPassword()">توليد كلمة مرور</button>
-          <button class="btn">حفظ الحساب</button>
-        </div>
+        <button type="button" class="btn-outline" onclick="document.getElementById('st-pass').value=Hassad.genPassword()">توليد</button>
+        <button class="btn">حفظ</button>
         <p class="hint" id="new-cred"></p>
       </form>
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصة المباشرة</h3>
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصة</h3>
           <div class="field"><label>المادة</label><select id="live-form-subject"></select></div>
-          <div class="field"><label>عنوان الحصة</label><input id="live-title" required></div>
-          <div class="field"><label>تاريخ الحصة</label><input id="live-date" type="date" required></div>
-          <div class="field"><label>وقت البدء</label><input id="live-hour" type="time" required></div>
+          <div class="field"><label>العنوان</label><input id="live-title" required></div>
+          <div class="field"><label>التاريخ</label><input id="live-date" type="date" required></div>
+          <div class="field"><label>الوقت</label><input id="live-hour" type="time" required></div>
           <div class="field"><label>رابط البث</label><input id="live-embed" dir="ltr"></div>
-          <button class="btn">نشر الحصة</button>
+          <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب تفاعلي</h3>
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب من صورة</h3>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
           <div class="field">
-            <label>الأسئلة (ضع * بجانب الإجابة الصحيحة)</label>
-            <textarea id="hw-questions" rows="10" placeholder="س: ناتج ٥ + ٣؟
-أ) ٦
-ب) ٨ *
-ج) ٩
-د) ٧
-
-س: قياس الزاوية القائمة؟
-أ) ٩٠ *
-ب) ١٨٠
-ج) ٤٥"></textarea>
+            <label>صورة ورقة العمل / الأسئلة</label>
+            <input id="hw-image" type="file" accept="image/*">
+            <img id="hw-preview" alt="" style="margin-top:8px;max-height:180px;border-radius:12px;display:none">
           </div>
-          <p class="hint">كل سؤال في مقطعة، وعلامة * على الخيار الصحيح. النظام يحوّلها إلى نشاط للطالب.</p>
-          <button class="btn btn-gold">نشر الواجب</button>
+          <div class="field">
+            <label>الأسئلة المستخرجة (أو اكتبها يدوياً بعلامة *)</label>
+            <textarea id="hw-questions" rows="8" placeholder="س: ...
+أ) ...
+ب) ... *"></textarea>
+          </div>
+          <p class="hint">أرفق الصورة هنا ليراها الطالب. لتحويل الصورة إلى أسئلة: أرسل الصورة في المحادثة مع جروك وسأضع الأسئلة جاهزة.</p>
+          <button class="btn btn-gold">نشر النشاط</button>
         </form>
       </div>
-      <section class="card" style="margin-top:16px">
-        <h3 style="margin-bottom:12px;color:var(--teal-900)">الطلاب</h3>
-        <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table>
-      </section>
-      <section class="card" style="margin-top:16px">
-        <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصص</h3>
-        <table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
-      </section>
-      <section class="card" style="margin-top:16px"><h3 style="margin-bottom:12px;color:var(--teal-900)">الواجبات</h3><div class="list" id="admin-hw"></div></section>
+      <section class="card" style="margin-top:16px"><h3>الطلاب</h3><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table></section>
+      <section class="card" style="margin-top:16px"><h3>الحصص</h3><table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table></section>
+      <section class="card" style="margin-top:16px"><h3>الواجبات</h3><div class="list" id="admin-hw"></div></section>
     </main>
   </div>
   <script src="js/app.js"></script>
   <script src="js/quiz.js"></script>
-  <script>Hassad.renderAdmin();</script>
+  <script>
+    Hassad.renderAdmin();
+    document.getElementById("hw-image").addEventListener("change", function(){
+      const f=this.files[0]; const img=document.getElementById("hw-preview");
+      if(!f){img.style.display="none"; return;}
+      const r=new FileReader(); r.onload=()=>{img.src=r.result; img.style.display="block";};
+      r.readAsDataURL(f);
+    });
+  </script>
 </body>
 </html>

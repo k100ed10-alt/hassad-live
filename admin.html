@@ -11,8 +11,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="admin.html" style="color:#ead9a0">
-        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt="">
-        إدارة حَصاد
+        <img src="https://dummyimage.com/92x92/0b3d4a/ead9a0.png&text=%D8%AD" alt=""> إدارة حَصاد
       </a>
       <nav class="side-nav">
         <a class="active" href="admin.html">لوحة التحكم</a>
@@ -23,39 +22,51 @@
     <main class="main">
       <div class="topbar">
         <div>
-          <h1>لوحة المعلم والإدارة</h1>
-          <p style="color:var(--muted)">أضف واجباً أو حدّث رابط البث لينعكس فوراً في شاشات الطلاب.</p>
-        </div>
-        <div class="user-chip">
-          <div class="avatar">م</div>
-          <div><strong>صلاحيات معلم</strong><div style="font-size:12px;color:var(--muted)">teacher@hassad.om</div></div>
+          <h1>لوحة المعلم</h1>
+          <p style="color:var(--muted)">أنشئ حساب كل طالب ببريد وكلمة مرور خاصة، ثم أرسلهما لولي الأمر خارج الموقع.</p>
         </div>
       </div>
+      <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
+        <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء حساب طالب</h3>
+        <div class="grid-2">
+          <div class="field"><label>اسم الطالب</label><input id="st-name" required placeholder="يوسف العلوي"></div>
+          <div class="field"><label>الصف</label><input id="st-grade" required placeholder="الصف الثامن"></div>
+          <div class="field"><label>البريد الإلكتروني</label><input id="st-email" type="email" required placeholder="yousef@example.com"></div>
+          <div class="field"><label>كلمة المرور</label><input id="st-pass" required minlength="6" placeholder="اتركها فارغة أو اضغط توليد"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn-outline" onclick="document.getElementById('st-pass').value=Hassad.genPassword()">توليد كلمة مرور</button>
+          <button class="btn">حفظ الحساب</button>
+        </div>
+        <p class="hint" id="new-cred"></p>
+      </form>
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">تحديث الحصة المباشرة</h3>
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصة المباشرة</h3>
           <div class="field"><label>المادة</label><select id="live-form-subject"></select></div>
-          <div class="field"><label>عنوان الحصة</label><input id="live-title" required placeholder="حصة المعادلات"></div>
-          <div class="field"><label>موعد البث</label><input id="live-time" required placeholder="الخميس 8:00 م"></div>
-          <div class="field"><label>رابط تضمين يوتيوب</label><input id="live-embed" placeholder="https://www.youtube.com/embed/XXXX"></div>
-          <button class="btn">حفظ ونشر للطلاب</button>
+          <div class="field"><label>العنوان</label><input id="live-title" required></div>
+          <div class="field"><label>الموعد</label><input id="live-time" required></div>
+          <div class="field"><label>رابط البث</label><input id="live-embed"></div>
+          <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">إضافة واجب جديد</h3>
+          <h3 style="margin-bottom:12px;color:var(--teal-900)">واجب جديد</h3>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
-          <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
-          <div class="field"><label>تاريخ التسليم</label><input id="hw-due" type="date" required></div>
+          <div class="field"><label>العنوان</label><input id="hw-title" required></div>
+          <div class="field"><label>التسليم</label><input id="hw-due" type="date" required></div>
           <button class="btn btn-gold">نشر الواجب</button>
         </form>
       </div>
       <section class="card" style="margin-top:16px">
-        <h3 style="margin-bottom:12px;color:var(--teal-900)">جدول الحصص</h3>
+        <h3 style="margin-bottom:12px;color:var(--teal-900)">الطلاب وكلمات المرور</h3>
+        <p class="hint">الكلمة تظهر هنا للمعلم فقط لينسخها ويرسلها خارج الموقع. لا تنشرها في الصفحة العامة.</p>
+        <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th><th></th></tr></thead><tbody id="students"></tbody></table>
+      </section>
+      <section class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:12px;color:var(--teal-900)">الحصص</h3>
         <table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
       </section>
-      <div class="grid-2" style="margin-top:16px">
-        <section class="card"><h3 style="margin-bottom:12px;color:var(--teal-900)">الواجبات</h3><div class="list" id="admin-hw"></div></section>
-        <section class="card"><h3 style="margin-bottom:12px;color:var(--teal-900)">الطلاب</h3><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>الصف</th><th>الاشتراك</th></tr></thead><tbody id="students"></tbody></table></section>
-      </div>
+      <section class="card" style="margin-top:16px"><h3 style="margin-bottom:12px;color:var(--teal-900)">الواجبات</h3><div class="list" id="admin-hw"></div></section>
     </main>
   </div>
   <script src="js/app.js"></script>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة المعلم | حَصاد</title>
+  <title>لوحة الإدارة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=6" />
+  <link rel="stylesheet" href="css/style.css?v=7" />
   <link rel="icon" href="assets/logo.svg">
   <style>
     input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
@@ -17,33 +17,46 @@
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="admin.html" style="color:#ead9a0">
-        <img src="assets/logo.svg" alt="" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px"> إدارة حَصاد
+        <img src="assets/logo.svg" alt="" style="width:40px;height:50px;object-fit:contain;background:#fff;border-radius:8px"> حَصاد
       </a>
       <nav class="side-nav">
-        <a class="active" href="admin.html">لوحة التحكم</a>
-        <a href="index.html">الموقع العام</a>
+        <a class="active" href="admin.html">اللوحة</a>
+        <a href="index.html">الموقع</a>
         <a href="#" onclick="Hassad.logout()">خروج</a>
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar"><h1>لوحة المعلم</h1></div>
-      <section class="card" style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
-        <h3 style="color:#7a4e00;margin-bottom:8px">مسح الكل</h3>
-        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل الطلاب والحصص والواجبات</button>
+      <div class="topbar"><h1>لوحة التحكم</h1></div>
+
+      <section class="card" data-admin-only style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
+        <h3 style="color:#7a4e00">مسح الكل</h3>
+        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل البيانات</button>
       </section>
 
-      <section class="card" style="margin-bottom:16px">
-        <h3 style="margin-bottom:8px;color:var(--teal-900)">إضافة دفعة (للمئات الطلاب)</h3>
-        <p class="hint">الصق اسماً في كل سطر. النظام يولّد البريد وكلمة المرور تلقائياً.</p>
+      <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
+        <h3 style="color:var(--teal-900);margin-bottom:10px">إنشاء معلم (مادة + صف فقط)</h3>
+        <div class="grid-2">
+          <div class="field"><label>الاسم</label><input id="tc-name" required></div>
+          <div class="field"><label>البريد</label><input id="tc-email" type="email" required></div>
+          <div class="field"><label>كلمة المرور</label><input id="tc-pass" required minlength="6"></div>
+          <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
+          <div class="field"><label>الصف</label><select id="tc-grade"></select></div>
+        </div>
+        <button class="btn">حفظ حساب المعلم</button>
+        <p class="hint" id="tc-msg"></p>
+      </form>
+
+      <section class="card" data-admin-only style="margin-bottom:16px">
+        <h3>إضافة دفعة طلاب</h3>
         <div class="field"><label>الصف</label><select id="bulk-grade"></select></div>
-        <div class="field"><label>الأسماء</label><textarea id="bulk-names" rows="8" placeholder="يوسف العلوي\nليان الشامسي\nحمد الكندي"></textarea></div>
+        <div class="field"><label>الأسماء</label><textarea id="bulk-names" rows="6"></textarea></div>
         <button type="button" class="btn" onclick="Hassad.bulkCreate()">أنشئ الحسابات</button>
-        <button type="button" class="btn-outline" onclick="Hassad.exportStudents()">تحميل كشف الدخول (Excel)</button>
+        <button type="button" class="btn-outline" onclick="Hassad.exportStudents()">تحميل الكشف</button>
         <p class="hint" id="bulk-msg"></p>
       </section>
 
-      <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
-        <h3 style="margin-bottom:12px;color:var(--teal-900)">إنشاء طالب واحد</h3>
+      <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
+        <h3>طالب واحد</h3>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="st-name" required></div>
           <div class="field"><label>الصف</label><select id="st-grade" required></select></div>
@@ -54,6 +67,7 @@
         <button class="btn">حفظ</button>
         <p class="hint" id="new-cred"></p>
       </form>
+
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
           <h3>الحصة</h3>
@@ -66,66 +80,72 @@
           <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3>واجب من صورة</h3>
-          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr"></div>
+          <h3>الواجب</h3>
+          <div class="field" data-admin-only><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr"></div>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
-          <div class="field"><label>عنوان الواجب</label><input id="hw-title" required></div>
+          <div class="field"><label>العنوان</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <div class="field"><label>الصورة</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" style="margin-top:8px;max-height:180px;border-radius:12px;display:none"></div>
+          <div class="field"><label>الصورة</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" style="margin-top:8px;max-height:160px;display:none;border-radius:12px"></div>
           <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة</button>
           <p class="hint" id="convert-msg"></p>
-          <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="8"></textarea></div>
+          <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="6"></textarea></div>
           <button class="btn btn-gold">نشر</button>
         </form>
       </div>
+
       <section class="card" style="margin-top:16px">
         <div class="del-bar"><h3>الطلاب</h3>
-          <div>
-            <button type="button" class="btn-outline" onclick="Hassad.exportStudents()">تحميل الكشف</button>
+          <div data-admin-only>
+            <button type="button" class="btn-outline" onclick="Hassad.exportStudents()">الكشف</button>
             <button type="button" class="btn" onclick="Hassad.deleteSelected('student')">حذف المحدد</button>
           </div>
         </div>
         <table class="table"><thead><tr>
-          <th><input type="checkbox" onclick="Hassad.toggleAll('student',this)"></th>
-          <th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th><th>الاشتراك</th>
+          <th data-admin-only><input type="checkbox" onclick="Hassad.toggleAll('student',this)"></th>
+          <th>الاسم</th><th>البريد</th><th data-admin-only>كلمة المرور</th><th>الصف</th><th>الاشتراك</th>
         </tr></thead><tbody id="students"></tbody></table>
       </section>
       <section class="card" style="margin-top:16px">
-        <div class="del-bar"><h3>الحصص</h3><button type="button" class="btn" onclick="Hassad.deleteSelected('live')">حذف المحدد</button></div>
-        <table class="table"><thead><tr>
-          <th><input type="checkbox" onclick="Hassad.toggleAll('live',this)"></th>
-          <th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th>
-        </tr></thead><tbody id="live-table"></tbody></table>
+        <div class="del-bar"><h3>الحصص</h3><button type="button" class="btn" data-admin-only onclick="Hassad.deleteSelected('live')">حذف المحدد</button></div>
+        <table class="table"><thead><tr><th data-admin-only></th><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
       </section>
       <section class="card" style="margin-top:16px">
-        <div class="del-bar"><h3>الواجبات</h3><button type="button" class="btn" onclick="Hassad.deleteSelected('hw')">حذف المحدد</button></div>
+        <div class="del-bar"><h3>الواجبات</h3><button type="button" class="btn" data-admin-only onclick="Hassad.deleteSelected('hw')">حذف المحدد</button></div>
         <div class="list" id="admin-hw"></div>
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=6"></script>
-  <script src="js/quiz.js?v=6"></script>
-  <script src="js/vision.js?v=6"></script>
-  <script src="js/admin-delete.js?v=6"></script>
-  <script src="js/grade-filter.js?v=6"></script>
-  <script src="js/bulk-students.js?v=6"></script>
+  <script src="js/app.js?v=7"></script>
+  <script src="js/roles.js?v=7"></script>
+  <script src="js/quiz.js?v=7"></script>
+  <script src="js/vision.js?v=7"></script>
+  <script src="js/admin-delete.js?v=7"></script>
+  <script src="js/grade-filter.js?v=7"></script>
+  <script src="js/bulk-students.js?v=7"></script>
   <script>
     function clearHassadData(){
-      if(!confirm("مسح الكل من هذا الجهاز؟")) return;
+      if(!confirm("مسح الكل؟")) return;
       const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
       data.students={};data.assignments=[];data.live_sessions=[];data.lessons=[];data.submissions={};
       localStorage.setItem("hassad-db",JSON.stringify(data)); location.reload();
     }
     Hassad.renderAdmin();
-    const g=document.getElementById("bulk-grade");
-    if(g && !g.options.length){
-      ["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر"].forEach(x=>{const o=document.createElement("option");o.textContent=x;g.appendChild(o)});
+    const grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر"];
+    ["bulk-grade","tc-grade"].forEach(id=>{
+      const el=document.getElementById(id); if(!el||el.options.length) return;
+      grades.forEach(g=>{const o=document.createElement("option");o.textContent=g;el.appendChild(o)});
+    });
+    const ts=document.getElementById("tc-subject");
+    if(ts && !ts.options.length){
+      [["math","الرياضيات"],["islamic","التربية الإسلامية"],["arabic","اللغة العربية"],["science","العلوم"]].forEach(([v,n])=>{const o=document.createElement("option");o.value=v;o.textContent=n;ts.appendChild(o)});
     }
     if(typeof fillGradeSelects==="function") fillGradeSelects();
+    if(Hassad.applyRoleUI) Hassad.applyRoleUI();
     const saved=localStorage.getItem("hassad-xai-key");
-    if(saved) document.getElementById("xai-key").value=saved;
-    document.getElementById("hw-image").addEventListener("change",function(){
+    const keyEl=document.getElementById("xai-key"); if(saved&&keyEl) keyEl.value=saved;
+    const imgIn=document.getElementById("hw-image");
+    if(imgIn) imgIn.addEventListener("change",function(){
       const f=this.files[0],img=document.getElementById("hw-preview");
       if(!f){img.style.display="none";return;}
       const r=new FileReader(); r.onload=()=>{img.src=r.result;img.style.display="block"}; r.readAsDataURL(f);

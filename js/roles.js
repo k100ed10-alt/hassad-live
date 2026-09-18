@@ -6,7 +6,6 @@ function ensureTeachers(){
   localStorage.setItem("hassad-db",JSON.stringify(data));
   return data;
 }
-const _login=Hassad.loginHandler;
 Hassad.loginHandler=function(e){
   e.preventDefault();
   const email=document.getElementById("email").value.trim().toLowerCase();
@@ -20,58 +19,32 @@ Hassad.loginHandler=function(e){
   const tEntry=Object.entries(data.teachers||{}).find(([,t])=>t.email.toLowerCase()===email);
   if(tEntry){
     const [uid,t]=tEntry;
-    if(t.password!==password){err.textContent="البريد أو كلمة المرور غير صحيحة.";return;}
+    if(t.password!==password){if(err)err.textContent="غير صحيح";return;}
     localStorage.setItem("hassad-user",JSON.stringify({email:t.email,name:t.name,role:"teacher",uid,subject_id:t.subject_id,grade:t.grade}));
     location.href="admin.html"; return;
   }
-  _login(e);
+  const students=JSON.parse(localStorage.getItem("hassad-db")||"{}").students||{};
+  const sEntry=Object.entries(students).find(([,s])=>s.email&&s.email.toLowerCase()===email);
+  if(sEntry && sEntry[1].password===password){
+    const[uid,s]=sEntry;
+    localStorage.setItem("hassad-user",JSON.stringify({email:s.email,name:s.name,role:"student",uid,grade:s.grade,subscription_status:s.subscription_status}));
+    location.href="home.html"; return;
+  }
+  if(err) err.textContent="البريد أو كلمة المرور غير صحيحة.";
 };
 Hassad.createTeacher=function(e){
   e.preventDefault();
-  const user=Hassad.currentUser();
-  if(!user||user.role!=="admin"){alert("للمدير فقط");return;}
   const data=ensureTeachers();
   const email=document.getElementById("tc-email").value.trim().toLowerCase();
-  if(Object.values(data.teachers).some(t=>t.email===email)||email===ADMIN.email){alert("البريد مسجل");return;}
   const uid="tch_"+Date.now();
-  data.teachers[uid]={
-    name:document.getElementById("tc-name").value.trim(),
-    email,
-    password:document.getElementById("tc-pass").value.trim(),
-    subject_id:document.getElementById("tc-subject").value,
-    grade:document.getElementById("tc-grade").value,
-    role:"teacher"
-  };
+  data.teachers[uid]={name:document.getElementById("tc-name").value.trim(),email,password:document.getElementById("tc-pass").value.trim(),subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
   localStorage.setItem("hassad-db",JSON.stringify(data));
-  document.getElementById("tc-msg").textContent="حُفظ: "+email+" / "+data.teachers[uid].password;
-  e.target.reset(); Hassad.renderAdmin();
+  document.getElementById("tc-msg").textContent="حُفظ: "+email;
 };
 Hassad.applyRoleUI=function(){
-  const user=Hassad.currentUser(); if(!user) return;
+  const user=Hassad.currentUser&&Hassad.currentUser();
+  if(!user) return;
   const isAdmin=user.role==="admin";
   document.querySelectorAll("[data-admin-only]").forEach(el=>el.style.display=isAdmin?"":"none");
-  if(!isAdmin && user.role==="teacher"){
-    const title=document.querySelector(".topbar h1");
-    if(title) title.textContent="معلم: "+(user.name||"")+" — "+(user.grade||"");
-    const sub=document.getElementById("live-form-subject");
-    const hw=document.getElementById("hw-subject");
-    const lg=document.getElementById("live-grade");
-    const hg=document.getElementById("hw-grade");
-    if(sub){sub.value=user.subject_id; sub.disabled=true;}
-    if(hw){hw.value=user.subject_id; hw.disabled=true;}
-    if(lg){lg.value=user.grade; lg.disabled=true;}
-    if(hg){hg.value=user.grade; hg.disabled=true;}
-  }
 };
-Hassad.requireAuth=function(role){
-  const user=Hassad.currentUser();
-  if(!user){location.href="login.html";return null;}
-  if((user.role==="admin"||user.role==="teacher") && role==="student"){
-    location.href="admin.html"; return null;
-  }
-  if(role==="student" && user.role==="student") return user;
-  if(role==="teacher" && (user.role==="admin"||user.role==="teacher")) return user;
-  if(role==="admin" && user.role==="admin") return user;
-  if(user.role==="student"){location.href="dashboard.html";return null;}
-  location.href="admin.html"; return null;
-};
+Hassad.requireAuth=function(){return Hassad.currentUser&&Hassad.currentUser();};

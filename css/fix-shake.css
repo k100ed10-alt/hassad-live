@@ -1,0 +1,12 @@
+html{overflow-x:clip;height:auto}
+body{min-height:100%;overflow-x:clip}
+.app-shell{min-height:100%;width:100%;overflow-x:clip}
+.main{width:100%;max-width:100%;overflow-x:clip}
+.topbar{width:100%;max-width:100%}
+.user-chip{max-width:100%;min-width:0}
+.grid-2{grid-template-columns:1fr !important;width:100%}
+#class-countdown{width:100%;max-width:100%}
+@media(max-width:980px){
+  .app-shell{grid-template-columns:1fr !important;min-height:auto}
+  .hero{min-height:auto}
+}

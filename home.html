@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>حَصاد | رئيسية الطالب</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Cairo,sans-serif;background:#fbf8f1;color:#1a2428;padding:12px 12px 80px}
+    header{background:#06262e;color:#ead9a0;border-radius:16px;padding:12px;margin-bottom:12px;overflow-x:auto;white-space:nowrap}
+    header a{color:#ead9a0;text-decoration:none;padding:8px 10px;display:inline-block}
+    header a.on{background:#0e5160;border-radius:999px;color:#fff}
+    .hi{font-size:22px;font-weight:800;color:#0e5160;margin:8px 0}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .pill{padding:8px 12px;border-radius:999px;font-weight:800;font-size:14px}
+    .p1{background:#fff7d6;color:#8a5a00}.p2{background:#ffe4e6;color:#9f1239}.p3{background:#e0f2fe;color:#075985}
+    .box{background:#fff;border:1px solid #e4d9bf;border-radius:16px;padding:14px;margin-bottom:12px}
+    .week{background:#0e5160;color:#fff;border:0}
+    .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .sub{border-radius:16px;padding:14px;min-height:100px;text-decoration:none;color:inherit;display:block}
+    .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
+    .row{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #eee3cc}
+    .btn{display:inline-block;background:#0e5160;color:#fff;border-radius:999px;padding:10px 14px;text-decoration:none;font-weight:800;border:0}
+    .fab{position:fixed;bottom:16px;left:16px;background:#e11d48;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-weight:800}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="on" href="home.html">الرئيسية</a>
+    <a href="subject.html?id=math">رياضيات</a>
+    <a href="subject.html?id=islamic">إسلامية</a>
+    <a href="subject.html?id=arabic">عربية</a>
+    <a href="subject.html?id=science">علوم</a>
+    <a href="#" id="out">خروج</a>
+  </header>
+  <div class="hi" id="hi">مرحباً</div>
+  <div class="pills">
+    <span class="pill p1" id="pts">★ ٤٠ نقطة</span>
+    <span class="pill p2" id="st">🔥 ٥ أيام</span>
+    <span class="pill p3" id="gr"></span>
+  </div>
+  <div class="box week"><strong>حصص الأسبوع</strong><div id="week" style="margin-top:8px">ستظهر هنا بعد جدولة المعلم</div></div>
+  <a class="box" id="last" href="subject.html?id=math" style="display:block;color:inherit">
+    <div style="font-size:12px;color:#5c6b70">آخر درس / تسجيل</div>
+    <strong id="last-t">افتح المادة</strong>
+  </a>
+  <div class="subs">
+    <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong><div>أ. خالد</div></a>
+    <a class="sub i" href="subject.html?id=islamic"><strong>التربية الإسلامية</strong><div>أ. فاطمة</div></a>
+    <a class="sub a" href="subject.html?id=arabic"><strong>اللغة العربية</strong><div>أ. سعيد</div></a>
+    <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong><div>أ. مريم</div></a>
+  </div>
+  <div class="box"><strong>واجبات صفك</strong> <span id="hwc"></span><div id="hw"></div></div>
+  <div class="box"><strong>تحدي اليوم</strong><p id="cq" style="margin:8px 0;font-weight:800"></p><div id="co"></div></div>
+  <button class="fab" id="fab" hidden>بث مباشر</button>
+  <script src="js/app.js?v=13"></script>
+  <script>
+    const u=Hassad.currentUser();
+    if(!u){location.href="login.html";}
+    else if(u.role==="admin"||u.role==="teacher"){location.href="admin.html";}
+    else{
+      document.getElementById("hi").textContent="مرحباً "+u.name;
+      document.getElementById("gr").textContent=u.grade||"";
+      document.getElementById("out").onclick=()=>Hassad.logout();
+      const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
+      const sessions=(data.live_sessions||[]).filter(s=>!s.grade||s.grade===u.grade);
+      const upcoming=sessions.filter(s=>s.status!=="completed");
+      document.getElementById("week").innerHTML=upcoming.length?upcoming.map(s=>`<div class="row"><span>${s.title}</span><span>${s.scheduled_time||""}</span></div>`).join(""):"لا حصص مجدولة هذا الأسبوع";
+      const rec=sessions.find(s=>s.recording_url);
+      if(rec){document.getElementById("last-t").textContent=rec.title;document.getElementById("last").href="subject.html?id="+rec.subject_id;}
+      const live=upcoming.find(s=>s.stream_url);
+      if(live){const f=document.getElementById("fab");f.hidden=false;f.onclick=()=>location.href="subject.html?id="+live.subject_id;}
+      const hws=(data.assignments||[]).filter(a=>!a.grade||a.grade===u.grade);
+      document.getElementById("hwc").textContent="("+(hws.filter(a=>!data.submissions[a.id+"_"+u.uid]).length)+")";
+      document.getElementById("hw").innerHTML=hws.map(a=>`<div class="row"><span>${a.title}</span><span>${data.submissions[a.id+"_"+u.uid]?"مسلم":"مفتوح"}</span></div>`).join("")||"<div class=\"row\">لا واجبات</div>";
+      document.getElementById("cq").textContent="٥ + ٧ كم يساوي؟";
+      document.getElementById("co").innerHTML="<button class=\"btn\" onclick=\"this.textContent='\u0661\u0662 \u2713';this.disabled=true\">١٢</button>";
+    }
+  </script>
+</body>
+</html>

@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الطالب | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4" />
-  <link rel="stylesheet" href="css/student.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/student.css?v=8" />
+  <link rel="stylesheet" href="css/live.css?v=8" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="dashboard.html" style="color:#ead9a0">
-        <img src="assets/logo.svg" alt="" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px">
-        حَصاد
+        <img src="assets/logo.svg" alt="" style="width:40px;height:50px;object-fit:contain;background:#fff;border-radius:8px"> حَصاد
       </a>
-      <nav class="side-nav" id="side-nav">
+      <nav class="side-nav">
         <a class="active" href="dashboard.html"><span>لوحة المواد</span></a>
-        <a href="subject.html?id=math" data-sub="math"><span>الرياضيات</span></a>
-        <a href="subject.html?id=islamic" data-sub="islamic"><span>التربية الإسلامية</span></a>
-        <a href="subject.html?id=arabic" data-sub="arabic"><span>اللغة العربية</span></a>
-        <a href="subject.html?id=science" data-sub="science"><span>العلوم</span></a>
+        <a href="subject.html?id=math"><span>الرياضيات</span></a>
+        <a href="subject.html?id=islamic"><span>التربية الإسلامية</span></a>
+        <a href="subject.html?id=arabic"><span>اللغة العربية</span></a>
+        <a href="subject.html?id=science"><span>العلوم</span></a>
         <a href="#" onclick="Hassad.logout()"><span>خروج</span></a>
       </nav>
     </aside>
@@ -37,18 +37,17 @@
         </div>
         <div class="user-chip">
           <div class="avatar" id="avatar">ط</div>
-          <div>
-            <strong id="chip-name">حساب طالب</strong>
-            <div style="font-size:12px;color:var(--muted)" id="chip-grade">اشتراك نشط</div>
-          </div>
+          <div><strong id="chip-name">حساب طالب</strong><div style="font-size:12px;color:var(--muted)" id="chip-grade"></div></div>
         </div>
       </div>
+      <button type="button" class="btn-outline" id="enable-alerts" style="display:none;margin-bottom:10px" onclick="Hassad.enableAlerts()">تفعيل تنبيه قبل الحصة بـ 15 دقيقة</button>
+      <div id="class-countdown" class="countdown"><strong>جارٍ تحميل الموعد...</strong></div>
       <div id="live-banner" class="live-banner">
         <div style="display:flex;align-items:center;gap:10px">
           <span class="pulse-dot"></span>
           <div><strong>بث مباشر الآن</strong><div id="live-banner-text" style="font-size:13px;opacity:.9"></div></div>
         </div>
-        <a class="btn btn-gold" id="live-banner-btn" href="#">انضم للدرس الآن</a>
+        <a class="btn btn-gold" id="live-banner-btn" href="#">انضم للدرس</a>
       </div>
       <a class="continue-card" id="continue-card" href="subject.html?id=math">
         <div class="continue-top">
@@ -61,10 +60,7 @@
       <h3 style="margin:0 0 10px;color:var(--teal-900)">مسار المواد</h3>
       <div class="subjects-grid" id="subject-grid"></div>
       <div class="grid-2" style="margin-top:16px">
-        <section class="card">
-          <h3 style="margin-bottom:12px;color:var(--teal-900)">واجبات صفك</h3>
-          <div class="list" id="assignment-list"></div>
-        </section>
+        <section class="card"><h3 style="margin-bottom:12px;color:var(--teal-900)">واجبات صفك</h3><div class="list" id="assignment-list"></div></section>
         <section class="challenge" id="challenge">
           <h3 style="color:var(--teal-900);margin-bottom:8px">تحدي اليوم</h3>
           <p id="challenge-q" style="font-weight:700"></p>
@@ -74,17 +70,19 @@
       </div>
     </main>
   </div>
-  <script src="js/app.js?v=4"></script>
-  <script src="js/student-ui.js?v=4"></script>
-  <script src="js/quiz.js?v=4"></script>
-  <script src="js/grade-filter.js?v=4"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/student-ui.js?v=8"></script>
+  <script src="js/quiz.js?v=8"></script>
+  <script src="js/grade-filter.js?v=8"></script>
+  <script src="js/live-plus.js?v=8"></script>
   <script>
     Hassad.renderDashboard();
     const u=Hassad.currentUser();
     if(u){
       const g=document.getElementById("grade-pill"); if(g) g.textContent=u.grade||"";
-      const c=document.getElementById("chip-grade"); if(c) c.textContent=u.grade||"اشتراك نشط";
+      const c=document.getElementById("chip-grade"); if(c) c.textContent=u.grade||"";
     }
+    Hassad.renderCountdown(); Hassad.watchReminders();
   </script>
 </body>
 </html>

@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>صفحة المادة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4" />
-  <link rel="stylesheet" href="css/student.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/student.css?v=8" />
+  <link rel="stylesheet" href="css/live.css?v=8" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="dashboard.html" style="color:#ead9a0">
-        <img src="assets/logo.svg" alt="حَصاد" style="width:40px;height:50px;object-fit:contain;background:#fff;border:0;border-radius:8px">
-        حَصاد
+        <img src="assets/logo.svg" alt="" style="width:40px;height:50px;object-fit:contain;background:#fff;border-radius:8px"> حَصاد
       </a>
       <nav class="side-nav">
         <a href="dashboard.html"><span>لوحة المواد</span></a>
@@ -27,34 +27,48 @@
     </aside>
     <main class="main">
       <div class="topbar">
-        <div>
-          <h1 id="subject-title">المادة</h1>
-          <p id="subject-teacher" style="color:var(--muted)"></p>
-        </div>
+        <div><h1 id="subject-title">المادة</h1><p id="subject-teacher" style="color:var(--muted)"></p></div>
         <a class="btn" href="dashboard.html">كل المواد</a>
       </div>
       <div class="tabs">
         <button class="tab active" onclick="Hassad.switchTab('live', this)">البث المباشر</button>
         <button class="tab" onclick="Hassad.switchTab('lessons', this)">الدروس</button>
+        <button class="tab" onclick="Hassad.switchTab('archive', this)">أرشيف الحصص</button>
         <button class="tab" onclick="Hassad.switchTab('hw', this)">الواجبات</button>
         <button class="tab" onclick="Hassad.switchTab('files', this)">الملفات</button>
       </div>
       <section id="panel-live" class="panel active">
         <p id="live-meta" style="margin-bottom:12px;color:var(--muted)"></p>
-        <div class="player" id="player"><div class="player-empty"><div><h3>لا يوجد بث الآن</h3></div></div></div>
+        <div class="classroom">
+          <div class="player" id="player"><div class="player-empty"><div><h3>لا يوجد بث الآن</h3></div></div></div>
+          <div class="chat-card" id="class-chat">
+            <strong>محادثة الحصة</strong>
+            <div class="chat-list" id="chat-list"></div>
+            <form class="chat-form" onsubmit="Hassad.sendChat(event)">
+              <input id="chat-text" placeholder="اكتب سؤالك..." autocomplete="off">
+              <button class="btn" type="submit">إرسال</button>
+            </form>
+          </div>
+        </div>
       </section>
       <section id="panel-lessons" class="panel"><div class="card"><div class="list" id="lessons"></div></div></section>
+      <section id="panel-archive" class="panel"><div class="card"><div class="list" id="archive"></div></div></section>
       <section id="panel-hw" class="panel">
         <div class="card"><div class="list" id="hw"></div></div>
         <div id="quiz-box" class="card" style="display:none;margin-top:12px"></div>
       </section>
-      <section id="panel-files" class="panel"><div class="card"><div class="row"><div><strong>ملفات الدرس</strong></div></div></div></section>
+      <section id="panel-files" class="panel"><div class="card"><div class="row"><strong>ملفات الدرس</strong></div></div></section>
     </main>
   </div>
-  <script src="js/app.js?v=4"></script>
-  <script src="js/student-ui.js?v=4"></script>
-  <script src="js/quiz.js?v=4"></script>
-  <script src="js/grade-filter.js?v=4"></script>
-  <script>Hassad.renderSubject();</script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/student-ui.js?v=8"></script>
+  <script src="js/quiz.js?v=8"></script>
+  <script src="js/grade-filter.js?v=8"></script>
+  <script src="js/live-plus.js?v=8"></script>
+  <script>
+    Hassad.renderSubject();
+    Hassad.renderPlayer();
+    Hassad.renderArchive();
+  </script>
 </body>
 </html>

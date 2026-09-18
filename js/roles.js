@@ -63,11 +63,15 @@ Hassad.applyRoleUI=function(){
     if(hg){hg.value=user.grade; hg.disabled=true;}
   }
 };
-const _req=Hassad.requireAuth;
 Hassad.requireAuth=function(role){
   const user=Hassad.currentUser();
   if(!user){location.href="login.html";return null;}
+  if((user.role==="admin"||user.role==="teacher") && role==="student"){
+    location.href="admin.html"; return null;
+  }
+  if(role==="student" && user.role==="student") return user;
   if(role==="teacher" && (user.role==="admin"||user.role==="teacher")) return user;
-  if(role==="admin" && user.role!=="admin"){location.href="admin.html";return null;}
-  return _req(role);
+  if(role==="admin" && user.role==="admin") return user;
+  if(user.role==="student"){location.href="dashboard.html";return null;}
+  location.href="admin.html"; return null;
 };

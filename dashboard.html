@@ -2,14 +2,23 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <title>لوحة الطالب | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=11" />
-  <link rel="stylesheet" href="css/student.css?v=11" />
-  <link rel="stylesheet" href="css/live.css?v=11" />
-  <link rel="stylesheet" href="css/fix-shake.css?v=11" />
+  <link rel="stylesheet" href="css/style.css?v=12" />
+  <link rel="stylesheet" href="css/student.css?v=12" />
+  <link rel="stylesheet" href="css/live.css?v=12" />
   <link rel="icon" href="assets/logo.svg">
+  <style>
+    html{scroll-behavior:auto !important;overflow-x:hidden !important;height:auto !important}
+    body{overflow-x:hidden !important;min-height:0 !important;width:100% !important}
+    *{animation:none !important;transition:none !important}
+    .app-shell{min-height:0 !important;width:100% !important;grid-template-columns:1fr !important;overflow-x:hidden !important}
+    .grid-2{grid-template-columns:1fr !important}
+    .user-chip{max-width:calc(100vw - 24px)}
+    .path-wrap{display:none !important}
+    .countdown{min-height:64px}
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -20,13 +29,14 @@
       <nav class="side-nav">
         <a class="active" href="dashboard.html"><span>لوحة المواد</span></a>
         <a href="subject.html?id=math"><span>الرياضيات</span></a>
-        <a href="subject.html?id=islamic"><span>التربية الإسلامية</span></a>
-        <a href="subject.html?id=arabic"><span>اللغة العربية</span></a>
+        <a href="subject.html?id=islamic"><span>الإسلامية</span></a>
+        <a href="subject.html?id=arabic"><span>العربية</span></a>
         <a href="subject.html?id=science"><span>العلوم</span></a>
         <a href="#" onclick="Hassad.logout()"><span>خروج</span></a>
       </nav>
     </aside>
     <main class="main">
+      <p style="font-size:11px;color:#888;margin:0 0 8px">إصدار 12 — بدون اهتزاز</p>
       <div class="topbar">
         <div>
           <h1 id="welcome">مرحباً</h1>
@@ -36,18 +46,10 @@
             <span class="pill" id="grade-pill"></span>
           </div>
         </div>
-        <div class="user-chip">
-          <div class="avatar" id="avatar">ط</div>
-          <div><strong id="chip-name">حساب طالب</strong><div style="font-size:12px;color:var(--muted)" id="chip-grade"></div></div>
-        </div>
       </div>
-      <button type="button" class="btn-outline" id="enable-alerts" style="display:none;margin-bottom:10px" onclick="Hassad.enableAlerts()">تفعيل التنبيه</button>
       <div id="class-countdown" class="countdown"><strong>لا حصة قادمة</strong></div>
       <div id="live-banner" class="live-banner">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span class="pulse-dot"></span>
-          <div><strong>بث مباشر الآن</strong><div id="live-banner-text" style="font-size:13px;opacity:.9"></div></div>
-        </div>
+        <div><strong>بث مباشر الآن</strong><div id="live-banner-text"></div></div>
         <a class="btn btn-gold" id="live-banner-btn" href="#">انضم</a>
       </div>
       <a class="continue-card" id="continue-card" href="subject.html?id=math">
@@ -57,7 +59,7 @@
         </div>
         <div class="bar"><span id="continue-bar" style="width:0%"></span></div>
       </a>
-      <h3 style="margin:0 0 10px;color:var(--teal-900)">مسار المواد</h3>
+      <h3 style="margin:0 0 10px;color:var(--teal-900)">المواد</h3>
       <div class="subjects-grid" id="subject-grid"></div>
       <section class="card" style="margin-top:16px"><h3 style="margin-bottom:12px;color:var(--teal-900)">واجبات صفك</h3><div class="list" id="assignment-list"></div></section>
       <section class="challenge" id="challenge" style="margin-top:16px">
@@ -68,21 +70,19 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=11"></script>
-  <script src="js/roles.js?v=11"></script>
-  <script src="js/student-ui.js?v=11"></script>
-  <script src="js/quiz.js?v=11"></script>
-  <script src="js/grade-filter.js?v=11"></script>
-  <script src="js/live-plus.js?v=11"></script>
+  <script src="js/app.js?v=12"></script>
+  <script src="js/roles.js?v=12"></script>
+  <script src="js/student-ui.js?v=12"></script>
+  <script src="js/quiz.js?v=12"></script>
+  <script src="js/grade-filter.js?v=12"></script>
+  <script src="js/live-plus.js?v=12"></script>
   <script>
     Hassad.renderDashboard();
     const u=Hassad.currentUser();
     if(u){
       const g=document.getElementById("grade-pill"); if(g) g.textContent=u.grade||"";
-      const c=document.getElementById("chip-grade"); if(c) c.textContent=u.grade||"";
     }
     if(Hassad.renderCountdown) Hassad.renderCountdown();
-    if(Hassad.watchReminders) Hassad.watchReminders();
   </script>
 </body>
 </html>

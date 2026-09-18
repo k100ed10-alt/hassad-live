@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
   <link rel="icon" href="assets/logo.svg">
   <style>
     input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
@@ -27,14 +27,12 @@
     </aside>
     <main class="main">
       <div class="topbar"><h1>لوحة التحكم</h1></div>
-
       <section class="card" data-admin-only style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
         <h3 style="color:#7a4e00">مسح الكل</h3>
         <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل البيانات</button>
       </section>
-
       <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
-        <h3 style="color:var(--teal-900);margin-bottom:10px">إنشاء معلم (مادة + صف فقط)</h3>
+        <h3 style="color:var(--teal-900);margin-bottom:10px">إنشاء معلم</h3>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
           <div class="field"><label>البريد</label><input id="tc-email" type="email" required></div>
@@ -45,7 +43,6 @@
         <button class="btn">حفظ حساب المعلم</button>
         <p class="hint" id="tc-msg"></p>
       </form>
-
       <section class="card" data-admin-only style="margin-bottom:16px">
         <h3>إضافة دفعة طلاب</h3>
         <div class="field"><label>الصف</label><select id="bulk-grade"></select></div>
@@ -54,7 +51,6 @@
         <button type="button" class="btn-outline" onclick="Hassad.exportStudents()">تحميل الكشف</button>
         <p class="hint" id="bulk-msg"></p>
       </section>
-
       <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3>طالب واحد</h3>
         <div class="grid-2">
@@ -67,16 +63,17 @@
         <button class="btn">حفظ</button>
         <p class="hint" id="new-cred"></p>
       </form>
-
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
-          <h3>الحصة</h3>
+          <h3>الحصة / StreamYard</h3>
           <div class="field"><label>المادة</label><select id="live-form-subject"></select></div>
           <div class="field"><label>الصف</label><select id="live-grade"></select></div>
           <div class="field"><label>العنوان</label><input id="live-title" required></div>
           <div class="field"><label>التاريخ</label><input id="live-date" type="date" required></div>
           <div class="field"><label>الوقت</label><input id="live-hour" type="time" required></div>
-          <div class="field"><label>رابط البث</label><input id="live-embed" dir="ltr"></div>
+          <div class="field"><label>رابط البث (يوتيوب أو StreamYard)</label><input id="live-embed" dir="ltr" placeholder="https://www.youtube.com/embed/... أو رابط المشاهدة"></div>
+          <div class="field"><label>رابط التسجيل بعد الحصة (الأرشيف)</label><input id="live-rec" dir="ltr" placeholder="https://youtube.com/watch?v=..."></div>
+          <p class="hint">ضع رابط البث للمباشر؁ ورابط التسجيل لظهور الحصة في أرشيف المادة.</p>
           <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
@@ -93,7 +90,6 @@
           <button class="btn btn-gold">نشر</button>
         </form>
       </div>
-
       <section class="card" style="margin-top:16px">
         <div class="del-bar"><h3>الطلاب</h3>
           <div data-admin-only>
@@ -116,13 +112,14 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=7"></script>
-  <script src="js/roles.js?v=7"></script>
-  <script src="js/quiz.js?v=7"></script>
-  <script src="js/vision.js?v=7"></script>
-  <script src="js/admin-delete.js?v=7"></script>
-  <script src="js/grade-filter.js?v=7"></script>
-  <script src="js/bulk-students.js?v=7"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/roles.js?v=8"></script>
+  <script src="js/quiz.js?v=8"></script>
+  <script src="js/vision.js?v=8"></script>
+  <script src="js/admin-delete.js?v=8"></script>
+  <script src="js/grade-filter.js?v=8"></script>
+  <script src="js/bulk-students.js?v=8"></script>
+  <script src="js/live-plus.js?v=8"></script>
   <script>
     function clearHassadData(){
       if(!confirm("مسح الكل؟")) return;

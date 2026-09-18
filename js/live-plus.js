@@ -3,11 +3,7 @@ function toEmbed(url){
   url=url.trim();
   let m=url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
   if(m) return "https://www.youtube.com/embed/"+m[1]+"?autoplay=1";
-  if(/streamyard\.com/i.test(url)){
-    if(url.includes("/watch")) return url;
-    return url;
-  }
-  if(url.includes("<iframe")) return "";
+  if(/streamyard\.com/i.test(url)) return url;
   return url;
 }
 function parseStart(s){
@@ -17,10 +13,10 @@ function parseStart(s){
   return null;
 }
 function fmtRemain(ms){
-  if(ms<=0) return "بدأت الآن";
+  if(ms<=0) return "00:00";
   const s=Math.floor(ms/1000);
   const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
-  if(h>0) return h+" س و "+m+" د و "+sec+" ث";
+  if(h>0) return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
   return String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
 }
 Hassad.nextSessionFor=function(user){
@@ -39,10 +35,19 @@ Hassad.renderCountdown=function(){
   const user=Hassad.currentUser&&Hassad.currentUser();
   if(!user||user.role!=="student"){el.style.display="none";return;}
   const n=Hassad.nextSessionFor(user);
-  if(!n){el.innerHTML="<strong>لا حصة قادمة مجدولة</strong>";return;}
+  if(!n){
+    if(!el.dataset.ready){el.innerHTML="<strong>لا حصة قادمة مجدولة</strong>";el.dataset.ready="empty";}
+    return;
+  }
   const left=n.t.getTime()-Date.now();
   const subj=((JSON.parse(localStorage.getItem("hassad-db")||"{}").subjects||{})[n.s.subject_id]||{}).name||"";
-  el.innerHTML=`<div><strong>الحصة القادمة</strong><div class="hint">${n.s.title} — ${subj}</div></div><div class="count-num">${fmtRemain(left)}</div>`;
+  if(el.dataset.ready!==String(n.s.id)){
+    el.innerHTML=`<div><strong>الحصة القادمة</strong><div class="hint">${n.s.title} — ${subj}</div></div><div class="count-num" id="count-num">${fmtRemain(left)}</div>`;
+    el.dataset.ready=String(n.s.id);
+  }else{
+    const num=document.getElementById("count-num");
+    if(num) num.textContent=fmtRemain(left);
+  }
 };
 Hassad.watchReminders=function(){
   const user=Hassad.currentUser&&Hassad.currentUser();
@@ -59,9 +64,7 @@ Hassad.watchReminders=function(){
       const key="alerted-"+n.s.id;
       if(sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key,"1");
-      if(Notification.permission==="granted"){
-        new Notification("حَصاد: الحصة بعد 15 دقيقة",{body:n.s.title,tag:n.s.id});
-      }
+      if(Notification.permission==="granted") new Notification("حَصاد: الحصة بعد 15 دقيقة",{body:n.s.title,tag:n.s.id});
       Hassad.toast&&Hassad.toast("الحصة بعد 15 دقيقة");
     }
   },1000);
@@ -71,7 +74,6 @@ Hassad.enableAlerts=function(){
   Notification.requestPermission().then(p=>{
     const b=document.getElementById("enable-alerts");
     if(b) b.style.display=p==="granted"?"none":"inline-flex";
-    Hassad.toast&&Hassad.toast(p==="granted"?"تم تفعيل التنبيه":"لم يُسمح بالإشعار");
   });
 };
 Hassad.renderPlayer=function(){
@@ -99,7 +101,6 @@ Hassad.drawChat=function(){
   const sid=(document.getElementById("class-chat")||{}).dataset.sid||"live";
   const msgs=JSON.parse(localStorage.getItem("hassad-chat-"+sid)||"[]");
   box.innerHTML=msgs.map(m=>`<div class="chat-item"><strong>${m.name}</strong><span>${m.text}</span></div>`).join("")||"<p class='hint'>لا رسائل بعد</p>";
-  box.scrollTop=box.scrollHeight;
 };
 Hassad.sendChat=function(e){
   e.preventDefault();
@@ -119,7 +120,7 @@ Hassad.renderArchive=function(){
   const id=new URLSearchParams(location.search).get("id")||"math";
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
   const items=(data.live_sessions||[]).filter(s=>s.subject_id===id && (s.recording_url||s.status==="completed"));
-  el.innerHTML=items.map(s=>`<div class="row"><div><strong>${s.title}</strong><div class="hint">${s.scheduled_time||""}</div></div>${s.recording_url?`<a class="btn" href="${s.recording_url}" target="_blank">مشاهدة</a>`:""}</div>`).join("")||"<p class='hint'>لا تسجيلات بعد لهذه المادة</p>";
+  el.innerHTML=items.map(s=>`<div class="row"><div><strong>${s.title}</strong><div class="hint">${s.scheduled_time||""}</div></div>${s.recording_url?`<a class="btn" href="${s.recording_url}" target="_blank">مشاهدة</a>`:""}</div>`).join("")||"<p class='hint'>لا تسجيلات بعد</p>";
 };
 const _sl=Hassad.saveLive;
 Hassad.saveLive=function(e){

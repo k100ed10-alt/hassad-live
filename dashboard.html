@@ -2,85 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>لوحة الطالب | حَصاد</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=13" />
-  <link rel="stylesheet" href="css/student.css?v=13" />
-  <link rel="stylesheet" href="css/live.css?v=13" />
-  <link rel="icon" href="assets/logo.svg">
-  <style>
-    html,body{overflow-x:hidden}
-    .app-shell{width:100%}
-    @media(max-width:980px){.app-shell{grid-template-columns:1fr !important}}
-  </style>
+  <meta http-equiv="refresh" content="0;url=home.html">
+  <title>تحويل</title>
+  <script>location.replace("home.html");</script>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="dashboard.html" style="color:#ead9a0">
-        <img src="assets/logo.svg" alt="" style="width:36px;height:44px;object-fit:contain;background:#fff;border-radius:8px"> حَصاد
-      </a>
-      <nav class="side-nav">
-        <a class="active" href="dashboard.html">الرئيسية</a>
-        <a href="subject.html?id=math">رياضيات</a>
-        <a href="subject.html?id=islamic">إسلامية</a>
-        <a href="subject.html?id=arabic">عربية</a>
-        <a href="subject.html?id=science">علوم</a>
-        <a href="#" onclick="Hassad.logout()">خروج</a>
-      </nav>
-    </aside>
-    <main class="main">
-      <h1 id="welcome" style="margin-bottom:8px">مرحباً</h1>
-      <div class="stat-row">
-        <span class="pill pill-points" id="points-pill">★ ٠ نقطة</span>
-        <span class="pill pill-streak" id="streak-pill">🔥 ٠ يوم</span>
-        <span class="pill pill-grade" id="grade-pill"></span>
-      </div>
-
-      <div class="week-box" style="margin-top:16px">
-        <h3>حصص الأسبوع</h3>
-        <div id="week-list"></div>
-      </div>
-
-      <div id="live-banner" class="live-banner">
-        <div><strong>البث قائم الآن</strong><div id="live-banner-text"></div></div>
-        <a class="btn btn-gold" id="live-banner-btn" href="#">انضم</a>
-      </div>
-
-      <a class="continue-card" id="continue-card" href="subject.html?id=math">
-        <div class="continue-top">
-          <div>
-            <div style="font-size:12px;color:var(--muted);font-weight:800">آخر درس / تسجيل</div>
-            <strong id="continue-title">اضغط للمشاهدة</strong>
-          </div>
-          <span class="badge badge-soon" id="continue-pct">٠٪</span>
-        </div>
-        <div class="bar"><span id="continue-bar" style="width:0%"></span></div>
-      </a>
-
-      <h3 style="margin:4px 0 10px;color:var(--teal-900)">المواد</h3>
-      <div class="subjects-grid" id="subject-grid"></div>
-
-      <section class="card" style="margin-top:16px">
-        <div class="sec-head"><h3>واجبات صفك</h3><span class="count-pill" id="hw-count">٠</span></div>
-        <div class="list" id="assignment-list"></div>
-      </section>
-      <section class="challenge" id="challenge" style="margin-top:16px">
-        <div class="sec-head"><h3>تحدي اليوم</h3><span class="count-pill" id="ch-count">١</span></div>
-        <p id="challenge-q" style="font-weight:700"></p>
-        <div class="list" id="challenge-opts"></div>
-        <p class="hint" id="challenge-msg"></p>
-      </section>
-    </main>
-  </div>
-  <button type="button" class="fab-live" id="fab-live" hidden>بث مباشر</button>
-  <script src="js/app.js?v=13"></script>
-  <script src="js/roles.js?v=13"></script>
-  <script src="js/student-ui.js?v=13"></script>
-  <script src="js/quiz.js?v=13"></script>
-  <script src="js/grade-filter.js?v=13"></script>
-  <script src="js/live-plus.js?v=13"></script>
-  <script>Hassad.renderDashboard();</script>
+  <p><a href="home.html">افتح الرئيسية</a></p>
 </body>
 </html>

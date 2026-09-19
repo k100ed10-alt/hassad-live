@@ -6,7 +6,11 @@
   <title>حَصاد</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;padding:12px 12px 28px}
+    body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;padding:16px}
+    .gate{max-width:420px;margin:40px auto;background:#06262e;color:#fff;border-radius:20px;padding:24px;text-align:center}
+    .gate a,.gate button{display:block;margin:10px 0;padding:12px;border-radius:12px;text-decoration:none;font-weight:800;border:0;width:100%}
+    .go{background:#ead9a0;color:#06262e}
+    .out{background:transparent;color:#ead9a0}
     header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px;overflow-x:auto;white-space:nowrap}
     header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
     header a.on{background:#0e5160;color:#fff}
@@ -20,50 +24,62 @@
     .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123}
     .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
-    .admin{display:none;background:#0e5160;color:#fff;border-radius:12px;padding:10px 14px;text-decoration:none;font-weight:800}
   </style>
 </head>
 <body>
-  <header>
-    <a class="on" href="home.html">الرئيسية</a>
-    <a href="subject.html?id=math">رياضيات</a>
-    <a href="subject.html?id=islamic">إسلامية</a>
-    <a href="subject.html?id=arabic">عربية</a>
-    <a href="subject.html?id=science">علوم</a>
-  </header>
-  <a class="admin" id="to-admin" href="admin.html">لوحة التحكم</a>
-  <h1 id="hi">مرحباً</h1>
-  <div class="pills">
-    <span class="p1">★ ٤٠ نقطة</span>
-    <span class="p2">🔥 ٥ أيام</span>
-    <span class="p3" id="gr"></span>
+  <div id="staff" style="display:none">
+    <div class="gate">
+      <h2>حساب الإدارة</h2>
+      <p style="opacity:.8;margin:10px 0 16px">هذه ليست صفحة الطالب</p>
+      <a class="go" href="admin.html">ادخل لوحة التحكم</a>
+      <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='login.html'">خروج</button>
+    </div>
   </div>
-  <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
-  <div class="subs">
-    <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong></a>
-    <a class="sub i" href="subject.html?id=islamic"><strong>الإسلامية</strong></a>
-    <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong></a>
-    <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong></a>
+  <div id="student">
+    <header>
+      <a class="on" href="home.html">الرئيسية</a>
+      <a href="subject.html?id=math">رياضيات</a>
+      <a href="subject.html?id=islamic">إسلامية</a>
+      <a href="subject.html?id=arabic">عربية</a>
+      <a href="subject.html?id=science">علوم</a>
+    </header>
+    <h1 id="hi">مرحباً</h1>
+    <div class="pills">
+      <span class="p1">★ ٤٠ نقطة</span>
+      <span class="p2">🔥 ٥ أيام</span>
+      <span class="p3" id="gr"></span>
+    </div>
+    <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
+    <div class="subs">
+      <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong></a>
+      <a class="sub i" href="subject.html?id=islamic"><strong>الإسلامية</strong></a>
+      <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong></a>
+      <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong></a>
+    </div>
+    <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
+    <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   </div>
-  <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
-  <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
-    if(u){
-      document.getElementById("hi").textContent="مرحباً "+(u.name||"");
-      document.getElementById("gr").textContent=u.grade||"";
-      var role=(u.role||"").toLowerCase();
-      var mail=(u.email||"").toLowerCase();
-      if(role==="admin"||role==="teacher"||mail.indexOf("admin@")===0){
-        document.getElementById("to-admin").style.display="inline-block";
+    var role=(u&&u.role||"").toLowerCase();
+    var mail=(u&&u.email||"").toLowerCase();
+    var nm=(u&&u.name||"").toLowerCase();
+    var staff=role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1;
+    if(staff){
+      document.getElementById("student").style.display="none";
+      document.getElementById("staff").style.display="block";
+    } else {
+      if(u){
+        document.getElementById("hi").textContent="مرحباً "+(u.name||"");
+        document.getElementById("gr").textContent=u.grade||"";
       }
+      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+      var sessions=data.live_sessions||[];
+      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
+      var hws=data.assignments||[];
+      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot">'+a.title+'</div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+      document.getElementById("board").innerHTML='<div class="slot">—</div>';
     }
-    var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-    var sessions=data.live_sessions||[];
-    document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
-    var hws=data.assignments||[];
-    document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot">'+a.title+'</div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
-    document.getElementById("board").innerHTML='<div class="slot">—</div>';
   </script>
 </body>
 </html>

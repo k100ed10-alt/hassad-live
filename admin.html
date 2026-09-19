@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=22" />
+  <link rel="stylesheet" href="css/style.css?v=25" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -13,13 +13,11 @@
       <a class="brand" href="admin.html" style="color:#ead9a0">حَصاد · إدارة</a>
       <nav class="side-nav">
         <a class="active" href="admin.html">اللوحة</a>
-        <a href="register.html">تسجيل طالب</a>
         <a href="#" onclick="Hassad.logout()">خروج</a>
       </nav>
     </aside>
     <main class="main">
       <div class="topbar"><h1>لوحة التحكم</h1></div>
-      <p class="hint" style="margin-bottom:12px">الطالب يسجّل نفسه من صفحة التسجيل برقم الهاتف. الحسابات تظهر هنا.</p>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3>إنشاء معلم</h3>
         <div class="grid-2">
@@ -32,7 +30,7 @@
         <p class="hint" id="tc-msg"></p>
       </form>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
-        <h3>طالب واحد (من اللوحة)</h3>
+        <h3>طالب واحد</h3>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="st-name" required></div>
           <div class="field"><label>الصف</label><select id="st-grade" required></select></div>
@@ -61,10 +59,8 @@
           <button class="btn">نشر</button>
         </form>
       </div>
-      <section class="card" style="margin-top:16px">
-        <h3>الطلاب</h3>
-        <table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th></tr></thead><tbody id="students"></tbody></table>
-      </section>
+      <h2 style="margin:20px 0 8px">الطلاب حسب الصف</h2>
+      <div id="students-by-grade"></div>
       <section class="card" style="margin-top:16px">
         <h3>الحصص</h3>
         <table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
@@ -75,16 +71,14 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=22"></script>
-  <script src="js/roles.js?v=22"></script>
-  <script src="js/grade-filter.js?v=22"></script>
+  <script src="js/app.js?v=25"></script>
+  <script src="js/roles.js?v=25"></script>
+  <script src="js/grade-filter.js?v=25"></script>
   <script>
     if(Hassad.renderAdmin) Hassad.renderAdmin();
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
-    ["tc-grade"].forEach(function(id){
-      var el=document.getElementById(id); if(!el||el.options.length) return;
-      grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;el.appendChild(o)});
-    });
+    var tc=document.getElementById("tc-grade");
+    if(tc && !tc.options.length) grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;tc.appendChild(o)});
     var ts=document.getElementById("tc-subject");
     if(ts && !ts.options.length){
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=27" />
+  <link rel="stylesheet" href="css/style.css?v=28" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -29,16 +29,6 @@
         <button class="btn">حفظ</button>
         <p class="hint" id="tc-msg"></p>
       </form>
-      <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
-        <h3>طالب واحد</h3>
-        <div class="grid-2">
-          <div class="field"><label>الاسم</label><input id="st-name" required></div>
-          <div class="field"><label>الصف</label><select id="st-grade" required></select></div>
-          <div class="field"><label>رقم الهاتف</label><input id="st-phone" required inputmode="tel" placeholder="9689xxxxxxx"></div>
-        </div>
-        <button class="btn">حفظ وولّد الكلمة</button>
-        <p class="hint" id="new-cred"></p>
-      </form>
       <div class="grid-2">
         <form class="card" onsubmit="Hassad.saveLive(event)">
           <h3>الحصة</h3>
@@ -57,7 +47,7 @@
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
           <div class="field"><label>العنوان</label><input id="hw-title" required></div>
-          <div class="field"><label>موضوع الواجب</label><textarea id="hw-topic" rows="4" placeholder="مثل: الكسور والجذر — يولّد Grok 5 أسئلة تفاعلية"></textarea></div>
+          <div class="field"><label>موضوع الواجب</label><textarea id="hw-topic" rows="4" placeholder="مثل: الكسور والجذر"></textarea></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
           <button class="btn">ولّد وانشر</button>
         </form>
@@ -80,11 +70,11 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=27"></script>
-  <script src="js/roles.js?v=27"></script>
-  <script src="js/grade-filter.js?v=27"></script>
-  <script src="js/quiz.js?v=27"></script>
-  <script src="js/xai-hw.js?v=27"></script>
+  <script src="js/app.js?v=28"></script>
+  <script src="js/roles.js?v=28"></script>
+  <script src="js/grade-filter.js?v=28"></script>
+  <script src="js/quiz.js?v=28"></script>
+  <script src="js/xai-hw.js?v=28"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["tc-grade","view-grade"].forEach(function(id){

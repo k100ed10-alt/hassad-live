@@ -30,11 +30,6 @@ Hassad.loginHandler=function(e){
   localLogin(email,password,err,finish,raw);
 };
 function localLogin(email,password,err,finish,raw){
-  if(ADMIN_ALIASES.includes(email)&&(password===ADMIN.password||password==="Teacher#1"||!password)){
-    if(password===ADMIN.password||password==="Teacher#1"){
-      return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
-    }
-  }
   if(ADMIN_ALIASES.includes(email)&&(password===ADMIN.password||password==="Teacher#1")){
     return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
   }
@@ -65,12 +60,27 @@ Hassad.createTeacher=function(e){
   e.preventDefault();
   const data=ensureTeachers();
   const email=document.getElementById("tc-email").value.trim().toLowerCase();
+  if(Object.values(data.teachers).some(function(t){return t.email===email;})){
+    document.getElementById("tc-msg").textContent="هذا البريد مسجل مسبقاً";
+    return;
+  }
   const uid="tch_"+Date.now();
   const password=(Hassad.genPassword&&Hassad.genPassword())||("Hs-"+Math.random().toString(36).slice(2,8));
   const rec={name:document.getElementById("tc-name").value.trim(),email,password,subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
-  document.getElementById("tc-msg").textContent="وُلِّدت الكلمة تلقائياً. أرسل للمعلم: "+email+" / "+password;
+  var box=document.getElementById("tc-pass");
+  if(box) box.value=password;
+  document.getElementById("tc-msg").textContent="كلمة المرور المولَّدة: "+password+" — أرسل للمعلم: "+email+" / "+password;
+  Hassad.renderTeachers();
+};
+Hassad.renderTeachers=function(){
+  var tb=document.getElementById("teachers");
+  if(!tb) return;
+  var data=ensureTeachers();
+  tb.innerHTML=Object.values(data.teachers||{}).map(function(t){
+    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.email||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+(t.grade||"")+"</td></tr>";
+  }).join("") || "<tr><td colspan='4'>لا معلمين بعد</td></tr>";
 };
 Hassad.applyRoleUI=function(){
   const user=Hassad.currentUser&&Hassad.currentUser();

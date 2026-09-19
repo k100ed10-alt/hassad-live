@@ -24,6 +24,10 @@
     .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123}
     .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
+    .rank{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #eee3cc}
+    .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
+    .gold b{background:#ead9a0}
+    .me{background:#f7f1df;margin:0 -14px;padding:10px 14px;border-radius:12px}
   </style>
 </head>
 <body>
@@ -45,8 +49,8 @@
     </header>
     <h1 id="hi">مرحباً</h1>
     <div class="pills">
-      <span class="p1">★ ٤٠ نقطة</span>
-      <span class="p2">🔥 ٥ أيام</span>
+      <span class="p1" id="pts">★ 0 نقطة</span>
+      <span class="p2" id="str">🔥 0 يوم</span>
       <span class="p3" id="gr"></span>
     </div>
     <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
@@ -56,10 +60,14 @@
       <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong></a>
       <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong></a>
     </div>
-    <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
+    <div class="box">
+      <strong>متصدرو الصف</strong>
+      <div id="board"></div>
+    </div>
     <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   </div>
   <script>
+    function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var role=(u&&u.role||"").toLowerCase();
     var mail=(u&&u.email||"").toLowerCase();
@@ -69,16 +77,45 @@
       document.getElementById("student").style.display="none";
       document.getElementById("staff").style.display="block";
     } else {
+      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+      data.students=data.students||{};
+      var prog={}; try{prog=JSON.parse(localStorage.getItem("hassad-prog")||"{}")}catch(e){}
+      if(!data.students.uid_yousef) data.students.uid_yousef={name:"يوسف العلوي",email:"yousef@hassad.om",grade:"الصف الثامن",points:40,streak:5};
+      if(!data.students.uid_layan) data.students.uid_layan={name:"ليان الشامسي",email:"layan@hassad.om",grade:"الصف التاسع",points:28,streak:3};
+      if(!data.students.uid_hamad) data.students.uid_hamad={name:"حمد الكندي",email:"hamad@hassad.om",grade:"الصف الثامن",points:15,streak:1};
+      var myPts=prog.points||0, myStreak=prog.streak||0;
+      if(u && u.uid && data.students[u.uid]){
+        myPts=data.students[u.uid].points||myPts||0;
+        myStreak=data.students[u.uid].streak||myStreak||0;
+        data.students[u.uid].points=myPts;
+        data.students[u.uid].streak=myStreak;
+      } else if(u){
+        myPts=myPts||40; myStreak=myStreak||1;
+      }
+      try{localStorage.setItem("hassad-db",JSON.stringify(data));}catch(e){}
       if(u){
         document.getElementById("hi").textContent="مرحباً "+(u.name||"");
         document.getElementById("gr").textContent=u.grade||"";
       }
-      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-      var sessions=data.live_sessions||[];
-      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
-      var hws=data.assignments||[];
+      document.getElementById("pts").textContent="★ "+ar(myPts)+" نقطة";
+      document.getElementById("str").textContent="🔥 "+ar(myStreak)+" يوم";
+      var grade=u&&u.grade;
+      var board=[];
+      Object.keys(data.students).forEach(function(id){
+        var s=data.students[id];
+        if(!s||!s.name) return;
+        if(grade && s.grade && s.grade!==grade) return;
+        board.push({name:s.name,pts:s.points||0,me:u&&(id===u.uid||s.email===u.email)});
+      });
+      if(u && !board.some(function(r){return r.me})) board.push({name:u.name,pts:myPts,me:true});
+      board.sort(function(a,b){return b.pts-a.pts});
+      document.getElementById("board").innerHTML=board.slice(0,8).map(function(r,i){
+        return '<div class="rank '+(i===0?"gold":"")+(r.me?" me":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+ar(i+1)+'</b> '+r.name+(r.me?" (أنت)":"")+'</span><span>★ '+ar(r.pts)+'</span></div>';
+      }).join("") || '<div class="slot">لا نقاط بعد — أكمل واجباً لتظهر هنا</div>';
+      var sessions=(data.live_sessions||[]).filter(function(s){return !grade||!s.grade||s.grade===grade;});
+      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
+      var hws=(data.assignments||[]).filter(function(a){return !grade||!a.grade||a.grade===grade;});
       document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot">'+a.title+'</div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
-      document.getElementById("board").innerHTML='<div class="slot">—</div>';
     }
   </script>
 </body>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=26" />
+  <link rel="stylesheet" href="css/style.css?v=27" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -51,12 +51,15 @@
           <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3>الواجب</h3>
+          <h3>الواجب بـ xAI</h3>
+          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
+          <button type="button" class="btn-outline" onclick="Hassad.saveXaiKey()">حفظ المفتاح</button>
           <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
           <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
           <div class="field"><label>العنوان</label><input id="hw-title" required></div>
+          <div class="field"><label>موضوع الواجب</label><textarea id="hw-topic" rows="4" placeholder="مثل: الكسور والجذر — يولّد Grok 5 أسئلة تفاعلية"></textarea></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <button class="btn">نشر</button>
+          <button class="btn">ولّد وانشر</button>
         </form>
       </div>
       <section class="card" style="margin-top:16px">
@@ -77,9 +80,11 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=26"></script>
-  <script src="js/roles.js?v=26"></script>
-  <script src="js/grade-filter.js?v=26"></script>
+  <script src="js/app.js?v=27"></script>
+  <script src="js/roles.js?v=27"></script>
+  <script src="js/grade-filter.js?v=27"></script>
+  <script src="js/quiz.js?v=27"></script>
+  <script src="js/xai-hw.js?v=27"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["tc-grade","view-grade"].forEach(function(id){
@@ -91,6 +96,8 @@
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
     if(typeof fillGradeSelects==="function") fillGradeSelects();
+    var xk=document.getElementById("xai-key");
+    if(xk) xk.value=localStorage.getItem("hassad-xai-key")||"";
     if(Hassad.renderAdmin) Hassad.renderAdmin();
   </script>
 </body>

@@ -3,62 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=30" />
-  <link rel="icon" href="assets/logo.svg">
+  <link rel="stylesheet" href="css/style.css?v=31" />
+  <script>
+    try{
+      var _u=JSON.parse(localStorage.getItem("hassad-user")||"null");
+      if(_u && _u.role==="teacher") location.replace("teacher.html");
+    }catch(e){}
+  </script>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="admin.html?v=30" style="color:#ead9a0">حَصاد · إدارة</a>
+      <a class="brand" href="admin.html" style="color:#ead9a0">حَصاد · إدارة</a>
       <nav class="side-nav">
-        <a class="active" href="admin.html?v=30">اللوحة</a>
+        <a class="active" href="admin.html">اللوحة</a>
         <a href="#" onclick="Hassad.logout()">خروج</a>
       </nav>
     </aside>
     <main class="main">
-      <div class="topbar"><h1>لوحة التحكم</h1></div>
+      <div class="topbar"><h1>لوحة المدير</h1></div>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3>إنشاء معلم</h3>
-        <p class="hint">اكتب الاسم والبريد. كلمة المرور تولَّد هنا عند الحفظ.</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
-          <div class="field"><label>البريد</label><input id="tc-email" type="email" required placeholder="name@hassad.om"></div>
+          <div class="field"><label>البريد</label><input id="tc-email" type="email" required></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
           <div class="field"><label>الصف</label><select id="tc-grade"></select></div>
-          <div class="field"><label>كلمة المرور المولَّدة</label><input id="tc-pass" readonly dir="ltr" placeholder="تظهر بعد الحفظ"></div>
+          <div class="field"><label>كلمة المرور المولَّدة</label><input id="tc-pass" readonly dir="ltr"></div>
         </div>
         <button class="btn">حفظ وولّد كلمة المرور</button>
         <p class="hint" id="tc-msg"></p>
       </form>
       <section class="card" style="margin-bottom:16px">
-        <h3>المعلمون وكلمات مرورهم</h3>
+        <h3>المعلمون</h3>
         <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th></tr></thead><tbody id="teachers"></tbody></table>
       </section>
-      <div class="grid-2">
-        <form class="card" onsubmit="Hassad.saveLive(event)">
-          <h3>الحصة</h3>
-          <div class="field"><label>المادة</label><select id="live-form-subject"></select></div>
-          <div class="field"><label>الصف</label><select id="live-grade"></select></div>
-          <div class="field"><label>العنوان</label><input id="live-title" required></div>
-          <div class="field"><label>التاريخ</label><input id="live-date" type="date" required></div>
-          <div class="field"><label>الوقت</label><input id="live-hour" type="time" required></div>
-          <div class="field"><label>رابط البث</label><input id="live-embed" dir="ltr"></div>
-          <button class="btn">نشر</button>
-        </form>
-        <form class="card" onsubmit="Hassad.saveHw(event)">
-          <h3>الواجب بـ xAI</h3>
-          <div class="field"><label>مفتاح xAI</label><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
-          <button type="button" class="btn-outline" onclick="Hassad.saveXaiKey()">حفظ المفتاح</button>
-          <div class="field"><label>المادة</label><select id="hw-subject"></select></div>
-          <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
-          <div class="field"><label>العنوان</label><input id="hw-title" required></div>
-          <div class="field"><label>موضوع الواجب</label><textarea id="hw-topic" rows="4"></textarea></div>
-          <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <button class="btn">ولّد وانشر</button>
-        </form>
-      </div>
       <section class="card" style="margin-top:16px">
         <h3>الطلاب حسب الصف</h3>
         <div class="field"><label>اختر الصف</label>
@@ -67,21 +47,11 @@
         <p class="hint" id="grade-count"></p>
         <table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>كلمة المرور</th></tr></thead><tbody id="students"></tbody></table>
       </section>
-      <section class="card" style="margin-top:16px">
-        <h3>الحصص</h3>
-        <table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
-      </section>
-      <section class="card" style="margin-top:16px">
-        <h3>الواجبات</h3>
-        <div class="list" id="admin-hw"></div>
-      </section>
     </main>
   </div>
-  <script src="js/app.js?v=30"></script>
-  <script src="js/roles.js?v=30"></script>
-  <script src="js/grade-filter.js?v=30"></script>
-  <script src="js/quiz.js?v=30"></script>
-  <script src="js/xai-hw.js?v=30"></script>
+  <script src="js/app.js?v=31"></script>
+  <script src="js/roles.js?v=31"></script>
+  <script src="js/grade-filter.js?v=31"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["tc-grade","view-grade"].forEach(function(id){
@@ -93,8 +63,6 @@
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
     if(typeof fillGradeSelects==="function") fillGradeSelects();
-    var xk=document.getElementById("xai-key");
-    if(xk) xk.value=localStorage.getItem("hassad-xai-key")||"";
     if(Hassad.renderAdmin) Hassad.renderAdmin();
     if(Hassad.renderTeachers) Hassad.renderTeachers();
   </script>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=14" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -18,16 +18,21 @@
     <form class="auth-card" onsubmit="Hassad.loginHandler(event)">
       <img src="assets/logo.svg" alt="حَصاد" style="width:88px;height:112px;object-fit:contain;margin:0 auto 8px">
       <h1>دخول</h1>
-      <p style="color:var(--muted);margin-bottom:18px">البريد وكلمة المرور</p>
+      <p style="color:var(--muted);margin-bottom:18px">البريد وكلمة المرور · مشروع onlineclass</p>
       <div class="field"><label>البريد</label><input id="email" type="email" required value="yousef@hassad.om"></div>
       <div class="field"><label>كلمة المرور</label><input id="password" type="text" required value="Yousef#84"></div>
       <p class="error" id="login-error"></p>
       <button class="btn" style="width:100%">دخول</button>
-      <p class="hint">طالب تجريبي: yousef@hassad.om<br>الكلمة: Yousef#84<br>مدير: admin@hassad.om / Admin#1</p>
+      <p class="hint">طالب: yousef@hassad.om / Yousef#84<br>مدير: admin@hassad.om / Admin#1</p>
     </form>
   </div>
-  <script src="js/seed.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
-  <script src="js/roles.js?v=14"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=15"></script>
+  <script src="js/fb.js?v=15"></script>
+  <script src="js/seed.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
+  <script src="js/roles.js?v=15"></script>
 </body>
 </html>

@@ -3,42 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تسجيل الدخول | حَصاد</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7" />
+  <title>دخول | حَصاد</title>
+  <link rel="stylesheet" href="css/style.css?v=14" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <nav class="nav">
     <div class="container nav-inner">
-      <a class="brand" href="index.html">
-        <img src="assets/logo.svg" alt="حَصاد" style="width:46px;height:58px;object-fit:contain;border:0;background:#fff">
-        <span>منصة حَصاد</span>
-      </a>
+      <a class="brand" href="index.html"><span>منصة حَصاد</span></a>
       <a class="ghost-btn" href="index.html">الرئيسية</a>
     </div>
   </nav>
   <div class="auth-wrap">
     <form class="auth-card" onsubmit="Hassad.loginHandler(event)">
       <img src="assets/logo.svg" alt="حَصاد" style="width:88px;height:112px;object-fit:contain;margin:0 auto 8px">
-      <h1 id="login-title">دخول</h1>
-      <p id="login-sub" style="color:var(--muted);margin-bottom:18px">البريد وكلمة المرور الخاصة بك.</p>
-      <div class="field"><label>البريد الإلكتروني</label><input id="email" type="email" required></div>
-      <div class="field"><label>كلمة المرور</label><input id="password" type="password" required></div>
+      <h1>دخول</h1>
+      <p style="color:var(--muted);margin-bottom:18px">البريد وكلمة المرور</p>
+      <div class="field"><label>البريد</label><input id="email" type="email" required value="yousef@hassad.om"></div>
+      <div class="field"><label>كلمة المرور</label><input id="password" type="text" required value="Yousef#84"></div>
       <p class="error" id="login-error"></p>
       <button class="btn" style="width:100%">دخول</button>
-      <p class="hint" id="login-hint"></p>
+      <p class="hint">طالب تجريبي: yousef@hassad.om<br>الكلمة: Yousef#84<br>مدير: admin@hassad.om / Admin#1</p>
     </form>
   </div>
-  <script src="js/app.js?v=7"></script>
-  <script src="js/roles.js?v=7"></script>
-  <script>
-    var as=new URLSearchParams(location.search).get("as");
-    if(as==="teacher"){
-      localStorage.removeItem("hassad-user");
-      document.getElementById("login-title").textContent="دخول الإدارة / المعلم";
-      document.getElementById("login-sub").textContent="المدير: admin@hassad.om — المعلم: البريد الذي أنشأه المدير.";
-    }
-  </script>
+  <script src="js/seed.js?v=14"></script>
+  <script src="js/app.js?v=14"></script>
+  <script src="js/roles.js?v=14"></script>
 </body>
 </html>

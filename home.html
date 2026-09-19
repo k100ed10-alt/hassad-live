@@ -27,7 +27,6 @@
     .gold b{background:#ead9a0}
     .hw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee3cc}
     .hw a,.more{background:#0e5160;color:#fff;text-decoration:none;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
-    .btn{background:#0e5160;color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:800}
     .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
     .cloud{font-size:12px;color:#5c6b70;margin-bottom:8px}
   </style>
@@ -68,18 +67,20 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=18"></script>
-  <script src="js/fb.js?v=18"></script>
+  <script src="js/firebase-config.js?v=19"></script>
+  <script src="js/fb.js?v=19"></script>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var mail=(u&&u.email||"").toLowerCase();
     var role=(u&&u.role||"").toLowerCase();
     var nm=(u&&u.name||"").toLowerCase();
-    if(role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1){
+    var staff=role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1;
+    if(staff){
+      u=u||{}; u.role="admin"; u.name=u.name||"مدير حَصاد";
+      localStorage.setItem("hassad-user", JSON.stringify(u));
       location.replace("admin.html");
     } else {
       if(u){document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||"";}
-      var SUB={math:"رياضيات",islamic:"إسلامية",arabic:"عربية",science:"علوم"};
       function paint(){
         var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
         var sessions=(data.live_sessions||[]).filter(function(s){return s.status!=="completed" && (!u||!s.grade||!u.grade||s.grade===u.grade);});
@@ -100,7 +101,7 @@
       if(window.HassadFB){
         HassadFB.init().then(function(ok){
           document.getElementById("cloud").textContent = ok ? "متصل بسحابة onlineclass" : HassadFB.status;
-          if(ok){ HassadFB.pull().then(paint); HassadFB.listen(paint); }
+          if(ok) HassadFB.pull().then(paint);
         });
       }
     }

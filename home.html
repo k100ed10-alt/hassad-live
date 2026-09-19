@@ -16,7 +16,6 @@
     .p1{background:#fff3c4}.p2{background:#ffd6db}.p3{background:#d7eefe}
     .week{background:#0e5160;color:#fff;border-radius:18px;padding:14px;margin-bottom:12px}
     .slot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
-    .slot b{display:block}
     .when{background:#ead9a0;color:#06262e;border-radius:999px;padding:4px 10px;font-weight:800;font-size:12px;white-space:nowrap}
     .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
     .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123;display:flex;flex-direction:column;justify-content:space-between}
@@ -35,7 +34,6 @@
     <a href="subject.html?id=islamic">إسلامية</a>
     <a href="subject.html?id=arabic">عربية</a>
     <a href="subject.html?id=science">علوم</a>
-    <a href="admin.html">المعلم</a>
   </header>
   <h1 id="hi">مرحباً</h1>
   <div class="pills">
@@ -63,27 +61,16 @@
     <button class="btn" type="button" onclick="this.textContent='١٢ ✓ · +10'">١٢</button>
   </div>
   <script>
-    var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var SUB={math:"رياضيات",islamic:"إسلامية",arabic:"عربية",science:"علوم"};
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     if(u){document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||"";}
     var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
     var sessions=(data.live_sessions||[]).filter(function(s){return s.status!=="completed" && (!u||!s.grade||!u.grade||s.grade===u.grade);});
     var week=document.getElementById("week");
-    if(!sessions.length){
-      week.innerHTML='<div class="slot"><span>لا حصص هذا الأسبوع</span></div>';
-    }else{
-      week.innerHTML=sessions.map(function(s){
-        return '<div class="slot"><div><b>'+s.title+'</b><small>'+(SUB[s.subject_id]||"")+'</small></div><span class="when">'+(s.scheduled_time||"موعد قريباً")+'</span></div>';
-      }).join("");
-    }
+    week.innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot"><div><b>'+s.title+'</b><small> '+(SUB[s.subject_id]||"")+'</small></div><span class="when">'+(s.scheduled_time||"موعد")+'</span></div>';}).join(""):'<div class="slot"><span>لا حصص هذا الأسبوع</span></div>';
     var hws=(data.assignments||[]).filter(function(a){return !u||!a.grade||!u.grade||a.grade===u.grade;});
     var hw=document.getElementById("hw");
-    if(!hws.length) hw.innerHTML='<div class="hw"><span>لا واجبات جديدة</span></div>';
-    else hw.innerHTML=hws.map(function(a){
-      var extra=a.questions||a.image?"نشاط تفاعلي":"فتح";
-      return '<div class="hw"><div><b>'+a.title+'</b><div style="font-size:12px;color:#5c6b70">'+(SUB[a.subject_id]||"")+(a.due_date?" · آخر موعد "+a.due_date:"")+'</div></div><a href="subject.html?id='+(a.subject_id||"math")+'">'+extra+'</a></div>';
-    }).join("");
+    hw.innerHTML=hws.length?hws.map(function(a){return '<div class="hw"><div><b>'+a.title+'</b><div style="font-size:12px;color:#5c6b70">'+(SUB[a.subject_id]||"")+(a.due_date?" · "+a.due_date:"")+'</div></div><a href="subject.html?id='+(a.subject_id||"math")+'">'+(a.questions||a.image?"نشاط":"فتح")+'</a></div>';}).join(""):'<div class="hw"><span>لا واجبات جديدة</span></div>';
   </script>
 </body>
 </html>

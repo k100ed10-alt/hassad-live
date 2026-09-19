@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=15" />
+  <link rel="stylesheet" href="css/style.css?v=16" />
   <link rel="icon" href="assets/logo.svg">
   <style>
     input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
@@ -30,7 +30,7 @@
       <section class="card" data-admin-only style="margin-bottom:16px;background:#e8f4f3">
         <h3 style="color:#0e5160">Firebase · onlineclass</h3>
         <p class="hint" id="fb-status">الصق كائن الويب من إعدادات المشروع</p>
-        <textarea class="ltr" id="fb-json" placeholder='{"apiKey":"...","authDomain":"onlineclass.firebaseapp.com","projectId":"onlineclass","storageBucket":"onlineclass.appspot.com","messagingSenderId":"...","appId":"..."}'></textarea>
+        <textarea class="ltr" id="fb-json" placeholder='{"apiKey":"...","authDomain":"onlineclass-d632d.firebaseapp.com","projectId":"onlineclass-d632d","storageBucket":"onlineclass-d632d.firebasestorage.app","messagingSenderId":"...","appId":"..."}'></textarea>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn" onclick="Hassad.saveFbConfig()">حفظ الربط</button>
           <button type="button" class="btn-outline" onclick="Hassad.syncCloud()">رفع / جلب البيانات</button>
@@ -124,17 +124,17 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=15"></script>
-  <script src="js/fb.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
-  <script src="js/roles.js?v=15"></script>
-  <script src="js/fb-hooks.js?v=15"></script>
-  <script src="js/quiz.js?v=15"></script>
-  <script src="js/vision.js?v=15"></script>
-  <script src="js/admin-delete.js?v=15"></script>
-  <script src="js/grade-filter.js?v=15"></script>
-  <script src="js/bulk-students.js?v=15"></script>
-  <script src="js/live-plus.js?v=15"></script>
+  <script src="js/firebase-config.js?v=16"></script>
+  <script src="js/fb.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
+  <script src="js/roles.js?v=16"></script>
+  <script src="js/fb-hooks.js?v=16"></script>
+  <script src="js/quiz.js?v=16"></script>
+  <script src="js/vision.js?v=16"></script>
+  <script src="js/admin-delete.js?v=16"></script>
+  <script src="js/grade-filter.js?v=16"></script>
+  <script src="js/bulk-students.js?v=16"></script>
+  <script src="js/live-plus.js?v=16"></script>
   <script>
     function clearHassadData(){
       if(!confirm("مسح المحلي فقط؟")) return;
@@ -150,7 +150,7 @@
         if(HassadFB.ready) HassadFB.pull().then(function(){ Hassad.renderAdmin(); HassadFB.listen(function(){ Hassad.renderAdmin(); }); });
       });
     }
-    const grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر"];
+    const grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["bulk-grade","tc-grade"].forEach(id=>{
       const el=document.getElementById(id); if(!el||el.options.length) return;
       grades.forEach(g=>{const o=document.createElement("option");o.textContent=g;el.appendChild(o)});

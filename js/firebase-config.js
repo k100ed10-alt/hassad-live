@@ -1,11 +1,21 @@
 window.HASSAD_FIREBASE = {
-  enabled: false,
+  enabled: true,
+  projectName: "onlineclass",
   config: {
-    apiKey: "PASTE_API_KEY",
-    authDomain: "PASTE_PROJECT.firebaseapp.com",
-    projectId: "PASTE_PROJECT_ID",
-    storageBucket: "PASTE_PROJECT.appspot.com",
-    messagingSenderId: "PASTE_SENDER_ID",
-    appId: "PASTE_APP_ID"
+    apiKey: "",
+    authDomain: "onlineclass.firebaseapp.com",
+    projectId: "onlineclass",
+    storageBucket: "onlineclass.appspot.com",
+    messagingSenderId: "",
+    appId: ""
   }
 };
+try {
+  var saved = localStorage.getItem("hassad-fb-config");
+  if (saved) {
+    var parsed = JSON.parse(saved);
+    if (parsed && parsed.apiKey) {
+      window.HASSAD_FIREBASE.config = Object.assign(window.HASSAD_FIREBASE.config, parsed);
+    }
+  }
+} catch (e) {}

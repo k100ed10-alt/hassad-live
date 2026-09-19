@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /students/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /teachers/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /assignments/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /live_sessions/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /lessons/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /submissions/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

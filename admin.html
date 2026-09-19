@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
   <link rel="icon" href="assets/logo.svg">
   <style>
     input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
     .del-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
     .del-bar .btn{background:#b42318;color:#fff}
+    textarea.ltr{direction:ltr;text-align:left;font-family:monospace;min-height:120px}
   </style>
 </head>
 <body>
@@ -27,9 +27,19 @@
     </aside>
     <main class="main">
       <div class="topbar"><h1>لوحة التحكم</h1></div>
+      <section class="card" data-admin-only style="margin-bottom:16px;background:#e8f4f3">
+        <h3 style="color:#0e5160">Firebase · onlineclass</h3>
+        <p class="hint" id="fb-status">الصق كائن الويب من إعدادات المشروع</p>
+        <textarea class="ltr" id="fb-json" placeholder='{"apiKey":"...","authDomain":"onlineclass.firebaseapp.com","projectId":"onlineclass","storageBucket":"onlineclass.appspot.com","messagingSenderId":"...","appId":"..."}'></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn" onclick="Hassad.saveFbConfig()">حفظ الربط</button>
+          <button type="button" class="btn-outline" onclick="Hassad.syncCloud()">رفع / جلب البيانات</button>
+        </div>
+        <p class="hint" id="fb-msg"></p>
+      </section>
       <section class="card" data-admin-only style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
         <h3 style="color:#7a4e00">مسح الكل</h3>
-        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل البيانات</button>
+        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل البيانات المحلية</button>
       </section>
       <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3 style="color:var(--teal-900);margin-bottom:10px">إنشاء معلم</h3>
@@ -71,9 +81,8 @@
           <div class="field"><label>العنوان</label><input id="live-title" required></div>
           <div class="field"><label>التاريخ</label><input id="live-date" type="date" required></div>
           <div class="field"><label>الوقت</label><input id="live-hour" type="time" required></div>
-          <div class="field"><label>رابط البث (يوتيوب أو StreamYard)</label><input id="live-embed" dir="ltr" placeholder="https://www.youtube.com/embed/... أو رابط المشاهدة"></div>
-          <div class="field"><label>رابط التسجيل بعد الحصة (الأرشيف)</label><input id="live-rec" dir="ltr" placeholder="https://youtube.com/watch?v=..."></div>
-          <p class="hint">ضع رابط البث للمباشر؁ ورابط التسجيل لظهور الحصة في أرشيف المادة.</p>
+          <div class="field"><label>رابط البث</label><input id="live-embed" dir="ltr"></div>
+          <div class="field"><label>رابط التسجيل</label><input id="live-rec" dir="ltr"></div>
           <button class="btn">نشر</button>
         </form>
         <form class="card" onsubmit="Hassad.saveHw(event)">
@@ -83,7 +92,7 @@
           <div class="field"><label>الصف</label><select id="hw-grade"></select></div>
           <div class="field"><label>العنوان</label><input id="hw-title" required></div>
           <div class="field"><label>آخر موعد</label><input id="hw-due" type="date" required></div>
-          <div class="field"><label>الصورة</label><input id="hw-image" type="file" accept="image/*"><img id="hw-preview" style="margin-top:8px;max-height:160px;display:none;border-radius:12px"></div>
+          <div class="field"><label>الصورة</label><input id="hw-image" type="file" accept="image/*"></div>
           <button type="button" class="btn" onclick="Hassad.convertImage()">حوّل الصورة</button>
           <p class="hint" id="convert-msg"></p>
           <div class="field"><label>الأسئلة</label><textarea id="hw-questions" rows="6"></textarea></div>
@@ -112,22 +121,35 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=8"></script>
-  <script src="js/roles.js?v=8"></script>
-  <script src="js/quiz.js?v=8"></script>
-  <script src="js/vision.js?v=8"></script>
-  <script src="js/admin-delete.js?v=8"></script>
-  <script src="js/grade-filter.js?v=8"></script>
-  <script src="js/bulk-students.js?v=8"></script>
-  <script src="js/live-plus.js?v=8"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=15"></script>
+  <script src="js/fb.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
+  <script src="js/roles.js?v=15"></script>
+  <script src="js/fb-hooks.js?v=15"></script>
+  <script src="js/quiz.js?v=15"></script>
+  <script src="js/vision.js?v=15"></script>
+  <script src="js/admin-delete.js?v=15"></script>
+  <script src="js/grade-filter.js?v=15"></script>
+  <script src="js/bulk-students.js?v=15"></script>
+  <script src="js/live-plus.js?v=15"></script>
   <script>
     function clearHassadData(){
-      if(!confirm("مسح الكل؟")) return;
+      if(!confirm("مسح المحلي فقط؟")) return;
       const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
       data.students={};data.assignments=[];data.live_sessions=[];data.lessons=[];data.submissions={};
       localStorage.setItem("hassad-db",JSON.stringify(data)); location.reload();
     }
     Hassad.renderAdmin();
+    if(window.HassadFB){
+      HassadFB.init().then(function(){
+        var el=document.getElementById("fb-status");
+        if(el) el.textContent=HassadFB.status;
+        if(HassadFB.ready) HassadFB.pull().then(function(){ Hassad.renderAdmin(); HassadFB.listen(function(){ Hassad.renderAdmin(); }); });
+      });
+    }
     const grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر"];
     ["bulk-grade","tc-grade"].forEach(id=>{
       const el=document.getElementById(id); if(!el||el.options.length) return;
@@ -139,14 +161,6 @@
     }
     if(typeof fillGradeSelects==="function") fillGradeSelects();
     if(Hassad.applyRoleUI) Hassad.applyRoleUI();
-    const saved=localStorage.getItem("hassad-xai-key");
-    const keyEl=document.getElementById("xai-key"); if(saved&&keyEl) keyEl.value=saved;
-    const imgIn=document.getElementById("hw-image");
-    if(imgIn) imgIn.addEventListener("change",function(){
-      const f=this.files[0],img=document.getElementById("hw-preview");
-      if(!f){img.style.display="none";return;}
-      const r=new FileReader(); r.onload=()=>{img.src=r.result;img.style.display="block"}; r.readAsDataURL(f);
-    });
   </script>
 </body>
 </html>

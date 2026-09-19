@@ -52,24 +52,19 @@ function renderAdmin(){
   const hs=document.getElementById("hw-subject"); if(hs) hs.innerHTML=Object.values(data.subjects||{}).map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
   const lt=document.getElementById("live-table"); if(lt) lt.innerHTML=(data.live_sessions||[]).map(l=>`<tr><td>${(data.subjects[l.subject_id]||{}).name||""}</td><td>${l.title}</td><td>${l.scheduled_time||""}</td><td>${l.stream_url?"مربوط":"—"}</td></tr>`).join("");
   const ah=document.getElementById("admin-hw"); if(ah) ah.innerHTML=(data.assignments||[]).map(a=>`<div class="row"><strong>${a.title}</strong> · ${a.grade||""}</div>`).join("");
-  const wrap=document.getElementById("students-by-grade");
-  if(wrap){
-    const groups={};
-    Object.entries(data.students||{}).forEach(function(pair){
-      const st=pair[1]||{};
-      const g=st.grade||"بدون صف";
-      if(user.role==="teacher" && user.grade && g!==user.grade) return;
-      if(!groups[g]) groups[g]=[];
-      groups[g].push(pair);
+  const pick=document.getElementById("view-grade");
+  const chosen=pick&&pick.value?pick.value:GRADE_ORDER[0];
+  const tb=document.getElementById("students");
+  const cnt=document.getElementById("grade-count");
+  if(tb){
+    const rows=Object.values(data.students||{}).filter(function(st){
+      if(user.role==="teacher" && user.grade && st.grade!==user.grade) return false;
+      return (st.grade||"")===chosen;
     });
-    const keys=GRADE_ORDER.filter(function(g){return groups[g]&&groups[g].length}).concat(Object.keys(groups).filter(function(g){return GRADE_ORDER.indexOf(g)<0;}));
-    wrap.innerHTML=keys.map(function(g){
-      const rows=groups[g].map(function(pair){
-        const st=pair[1];
-        return `<tr><td>${st.name||""}</td><td>${st.phone||"—"}</td><td>${st.email||""}</td><td><code>${st.password||""}</code></td></tr>`;
-      }).join("");
-      return `<section class="card" style="margin-top:12px"><h3>${g} · ${groups[g].length}</h3><table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>كلمة المرور</th></tr></thead><tbody>${rows}</tbody></table></section>`;
-    }).join("") || '<p class="hint">لا طلاب بعد</p>';
+    tb.innerHTML=rows.map(function(st){
+      return `<tr><td>${st.name||""}</td><td>${st.phone||"—"}</td><td>${st.email||""}</td><td><code>${st.password||""}</code></td></tr>`;
+    }).join("") || `<tr><td colspan="4">لا طلاب في ${chosen}</td></tr>`;
+    if(cnt) cnt.textContent=rows.length? ("عدد الطلاب: "+rows.length) : "";
   }
 }
 function saveLive(e){e.preventDefault();const date=document.getElementById("live-date").value;const hour=document.getElementById("live-hour").value;const data=db();data.live_sessions=data.live_sessions||[];const gEl=document.getElementById("live-grade");data.live_sessions.unshift({id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:document.getElementById("live-form-subject").value,grade:gEl?gEl.value:"",stream_url:(document.getElementById("live-embed").value||"").trim(),scheduled_time:formatWhen(date,hour),status:"upcoming"});saveDb(data);toast("تم نشر الحصة");renderAdmin();e.target.reset()}

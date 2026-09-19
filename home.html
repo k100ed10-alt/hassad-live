@@ -16,15 +16,19 @@
     .p1{background:#fff3c4}.p2{background:#ffd6db}.p3{background:#d7eefe}
     .week{background:#0e5160;color:#fff;border-radius:18px;padding:14px;margin-bottom:12px}
     .slot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
-    .when{background:#ead9a0;color:#06262e;border-radius:999px;padding:4px 10px;font-weight:800;font-size:12px;white-space:nowrap}
+    .when{background:#ead9a0;color:#06262e;border-radius:999px;padding:4px 10px;font-weight:800;font-size:12px}
     .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
     .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123;display:flex;flex-direction:column;justify-content:space-between}
     .sub small{opacity:.75}
     .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
+    .rank{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #eee3cc}
+    .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
+    .gold b{background:#ead9a0}
     .hw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee3cc}
-    .hw a{background:#0e5160;color:#fff;text-decoration:none;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
+    .hw a,.more{background:#0e5160;color:#fff;text-decoration:none;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
     .btn{background:#0e5160;color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:800}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
   </style>
 </head>
 <body>
@@ -52,6 +56,10 @@
     <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong><small>أ. مريم</small></a>
   </div>
   <div class="box">
+    <div class="head"><strong>متصدرو الصف</strong><a class="more" href="leaders.html">الكل</a></div>
+    <div id="board"></div>
+  </div>
+  <div class="box">
     <strong>واجبات صفك</strong>
     <div id="hw"></div>
   </div>
@@ -66,11 +74,15 @@
     if(u){document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||"";}
     var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
     var sessions=(data.live_sessions||[]).filter(function(s){return s.status!=="completed" && (!u||!s.grade||!u.grade||s.grade===u.grade);});
-    var week=document.getElementById("week");
-    week.innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot"><div><b>'+s.title+'</b><small> '+(SUB[s.subject_id]||"")+'</small></div><span class="when">'+(s.scheduled_time||"موعد")+'</span></div>';}).join(""):'<div class="slot"><span>لا حصص هذا الأسبوع</span></div>';
+    document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot"><div><b>'+s.title+'</b></div><span class="when">'+(s.scheduled_time||"موعد")+'</span></div>';}).join(""):'<div class="slot"><span>لا حصص هذا الأسبوع</span></div>';
+    var board=[
+      {name:"ليان الشامسي",pts:120},
+      {name:(u&&u.name)||"يوسف العلوي",pts:40},
+      {name:"حمد الكندي",pts:25}
+    ].sort(function(a,b){return b.pts-a.pts}).slice(0,3);
+    document.getElementById("board").innerHTML=board.map(function(r,i){return '<div class="rank '+(i===0?"gold":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+(i+1)+'</b> '+r.name+'</span><span>★ '+r.pts+'</span></div>';}).join("");
     var hws=(data.assignments||[]).filter(function(a){return !u||!a.grade||!u.grade||a.grade===u.grade;});
-    var hw=document.getElementById("hw");
-    hw.innerHTML=hws.length?hws.map(function(a){return '<div class="hw"><div><b>'+a.title+'</b><div style="font-size:12px;color:#5c6b70">'+(SUB[a.subject_id]||"")+(a.due_date?" · "+a.due_date:"")+'</div></div><a href="subject.html?id='+(a.subject_id||"math")+'">'+(a.questions||a.image?"نشاط":"فتح")+'</a></div>';}).join(""):'<div class="hw"><span>لا واجبات جديدة</span></div>';
+    document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="hw"><div><b>'+a.title+'</b></div><a href="subject.html?id='+(a.subject_id||"math")+'">فتح</a></div>';}).join(""):'<div class="hw"><span>لا واجبات جديدة</span></div>';
   </script>
 </body>
 </html>

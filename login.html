@@ -4,30 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=22" />
+  <link rel="stylesheet" href="css/style.css?v=23" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <nav class="nav">
     <div class="container nav-inner">
       <a class="brand" href="index.html"><span>منصة حَصاد</span></a>
-      <a class="ghost-btn" href="register.html">حساب جديد</a>
+      <a class="ghost-btn" href="register.html">طالب جديد</a>
     </div>
   </nav>
   <div class="auth-wrap">
     <form class="auth-card" onsubmit="Hassad.loginHandler(event)">
       <img src="assets/logo.svg" alt="حَصاد" style="width:88px;height:112px;object-fit:contain;margin:0 auto 8px">
-      <h1>دخول</h1>
-      <p style="color:var(--muted);margin-bottom:18px">الطالب يدخل برقم الهاتف · المدير بالبريد</p>
-      <div class="field"><label>رقم الهاتف أو البريد</label><input id="email" required placeholder="9689xxxxxxx" autocomplete="username"></div>
+      <h1 id="ttl">دخول</h1>
+      <p id="sub" style="color:var(--muted);margin-bottom:18px">الطالب برقم الهاتف · المعلم والمدير بالبريد</p>
+      <div class="field"><label id="lab">رقم الهاتف أو البريد</label><input id="email" required autocomplete="username"></div>
       <div class="field"><label>كلمة المرور</label><input id="password" type="password" required autocomplete="current-password"></div>
       <p class="error" id="login-error"></p>
       <button class="btn" style="width:100%">دخول</button>
-      <p class="hint"><a href="register.html">طالب جديد؟ أنشئ حسابك برقم الهاتف</a></p>
-      <p class="hint">مدير: admin@hassad.om / Admin#1</p>
+      <p class="hint" id="hint"><a href="register.html">طالب جديد؟ أنشئ حسابك</a></p>
+      <p class="hint"><a href="login.html?as=teacher">دخول المعلم</a> · <a href="login.html?as=admin">دخول المدير</a></p>
     </form>
   </div>
-  <script src="js/app.js?v=22"></script>
-  <script src="js/roles.js?v=22"></script>
+  <script src="js/app.js?v=23"></script>
+  <script src="js/roles.js?v=23"></script>
+  <script>
+    var as=new URLSearchParams(location.search).get("as");
+    if(as==="teacher"){
+      document.getElementById("ttl").textContent="دخول المعلم";
+      document.getElementById("sub").textContent="اكتب البريد الذي أنشأه المدير لك";
+      document.getElementById("lab").textContent="بريد المعلم";
+      document.getElementById("email").type="email";
+      document.getElementById("email").placeholder="teacher@hassad.om";
+      document.getElementById("hint").innerHTML="ينشئ المدير حساب المعلم من اللوحة";
+    }
+    if(as==="admin"){
+      document.getElementById("ttl").textContent="دخول المدير";
+      document.getElementById("lab").textContent="بريد المدير";
+      document.getElementById("email").value="admin@hassad.om";
+      document.getElementById("email").type="email";
+      document.getElementById("hint").textContent="admin@hassad.om / Admin#1";
+    }
+  </script>
 </body>
 </html>

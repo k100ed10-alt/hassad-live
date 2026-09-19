@@ -3,31 +3,38 @@ const ADMIN_ALIASES=["admin@hassad.om","teacher@hassad.om"];
 function ensureTeachers(){
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
   if(!data.teachers) data.teachers={};
+  if(!data.students) data.students={};
   localStorage.setItem("hassad-db",JSON.stringify(data));
   return data;
 }
+function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
+function normPhone(raw){
+  var d=digits(raw);
+  if(d.indexOf("00968")===0) d=d.slice(2);
+  if(d.indexOf("968")===0 && d.length>=11) return d.slice(0,11);
+  if(d.length===8 && /^[79]/.test(d)) return "968"+d;
+  return d.length===11 && d.indexOf("968")===0 ? d : "";
+}
 Hassad.loginHandler=function(e){
   e.preventDefault();
-  const email=document.getElementById("email").value.trim().toLowerCase();
+  const raw=document.getElementById("email").value.trim();
+  const email=raw.toLowerCase();
   const password=document.getElementById("password").value;
   const err=document.getElementById("login-error");
   function finish(user){
-    if(!user){ if(err) err.textContent="البريد أو كلمة المرور غير صحيحة."; return; }
+    if(!user){ if(err) err.textContent="الرقم أو كلمة المرور غير صحيحة."; return; }
     if(user==="badpass"){ if(err) err.textContent="كلمة المرور غير صحيحة."; return; }
     localStorage.setItem("hassad-user", JSON.stringify(user));
     location.href = (user.role==="admin"||user.role==="teacher") ? "admin.html" : "home.html";
   }
-  if(window.HassadFB && HassadFB.login){
-    if(err) err.textContent="جارٍ التحقق...";
-    HassadFB.login(email,password).then(function(u){
-      if(u) return finish(u);
-      localLogin(email,password,err,finish);
-    }).catch(function(){ localLogin(email,password,err,finish); });
-    return;
-  }
-  localLogin(email,password,err,finish);
+  localLogin(email,password,err,finish,raw);
 };
-function localLogin(email,password,err,finish){
+function localLogin(email,password,err,finish,raw){
+  if(ADMIN_ALIASES.includes(email)&&(password===ADMIN.password||password==="Teacher#1"||!password)){
+    if(password===ADMIN.password||password==="Teacher#1"){
+      return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
+    }
+  }
   if(ADMIN_ALIASES.includes(email)&&(password===ADMIN.password||password==="Teacher#1")){
     return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
   }
@@ -38,11 +45,19 @@ function localLogin(email,password,err,finish){
     if(t.password!==password) return finish("badpass");
     return finish({email:t.email,name:t.name,role:"teacher",uid,subject_id:t.subject_id,grade:t.grade});
   }
-  const students=(JSON.parse(localStorage.getItem("hassad-db")||"{}").students)||{};
-  const sEntry=Object.entries(students).find(([,s])=>s.email&&s.email.toLowerCase()===email);
-  if(sEntry && sEntry[1].password===password){
-    const[uid,s]=sEntry;
-    return finish({email:s.email,name:s.name,role:"student",uid,grade:s.grade,subscription_status:s.subscription_status});
+  const phone=normPhone(raw||email);
+  const students=data.students||{};
+  const sEntry=Object.entries(students).find(function(pair){
+    var s=pair[1]||{};
+    if(s.email && s.email.toLowerCase()===email) return true;
+    if(phone && s.phone===phone) return true;
+    if(phone && pair[0]==="phone_"+phone) return true;
+    return false;
+  });
+  if(sEntry){
+    if(sEntry[1].password!==password) return finish("badpass");
+    const uid=sEntry[0], s=sEntry[1];
+    return finish({email:s.email,name:s.name,role:"student",uid,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status});
   }
   finish(null);
 }
@@ -56,7 +71,6 @@ Hassad.createTeacher=function(e){
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
   document.getElementById("tc-msg").textContent="وُلِّدت الكلمة تلقائياً. أرسل للمعلم: "+email+" / "+password;
-  if(window.HassadFB) HassadFB.init().then(function(){ HassadFB.put("teachers", uid, rec); });
 };
 Hassad.applyRoleUI=function(){
   const user=Hassad.currentUser&&Hassad.currentUser();

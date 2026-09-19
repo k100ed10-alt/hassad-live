@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache" />
+  <title>لوحة المعلم | حَصاد</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;padding:16px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    h1{font-size:22px;color:#0e5160}
+    button,input,select,textarea{font:inherit}
+    .out{background:transparent;border:0;color:#0e5160;font-weight:800}
+    .card{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:16px;margin-bottom:14px}
+    label{display:block;font-weight:700;margin:10px 0 6px;font-size:14px}
+    input,select,textarea{width:100%;padding:11px;border:1px solid #d9d0bc;border-radius:12px;background:#fff}
+    .btn{width:100%;margin-top:12px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
+    .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px}
+    .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="hi">لوحة المعلم</h1>
+    <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='index.html'">خروج</button>
+  </header>
+  <p class="muted" id="meta"></p>
+
+  <form class="card" id="live-form">
+    <h3>إضافة حصة</h3>
+    <label>العنوان</label><input id="live-title" required>
+    <label>التاريخ</label><input id="live-date" type="date" required>
+    <label>الوقت</label><input id="live-hour" type="time" required>
+    <label>رابط البث</label><input id="live-embed" dir="ltr">
+    <button class="btn">نشر الحصة</button>
+  </form>
+
+  <form class="card" id="hw-form">
+    <h3>إضافة واجب</h3>
+    <label>العنوان</label><input id="hw-title" required>
+    <label>موضوع الواجب</label><textarea id="hw-topic" rows="3"></textarea>
+    <label>آخر موعد</label><input id="hw-due" type="date" required>
+    <button class="btn">نشر الواجب</button>
+  </form>
+
+  <div class="card">
+    <h3>جدولي</h3>
+    <div id="sched"></div>
+  </div>
+  <div class="card">
+    <h3>واجباتي</h3>
+    <div id="myhw"></div>
+  </div>
+
+  <script>
+    var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
+    var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+    var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+    if(!u){ location.href="login.html?as=teacher"; }
+    else if(u.role==="admin"){ location.href="admin.html"; }
+    else if(u.role!=="teacher"){ location.href="home.html"; }
+    function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
+    function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
+    function when(date,hour){
+      if(!date) return hour||"";
+      var p=date.split("-").map(Number);
+      var dt=new Date(p[0],p[1]-1,p[2]);
+      var clock=hour||"";
+      if(hour && hour.indexOf(":")>=0){ var hh=+hour.split(":")[0], mm=hour.split(":")[1]; var ap=hh>=12?"مساء":"صباح"; hh=hh%12||12; clock=hh+":"+mm+" "+ap; }
+      return DAYS[dt.getDay()]+" "+p[2]+"/"+p[1]+" — "+clock;
+    }
+    function mineLive(d){
+      return (d.live_sessions||[]).filter(function(s){
+        if(u.subject_id && s.subject_id && s.subject_id!==u.subject_id) return false;
+        if(u.grade && s.grade && s.grade!==u.grade) return false;
+        return true;
+      });
+    }
+    function mineHw(d){
+      return (d.assignments||[]).filter(function(s){
+        if(u.subject_id && s.subject_id && s.subject_id!==u.subject_id) return false;
+        if(u.grade && s.grade && s.grade!==u.grade) return false;
+        return true;
+      });
+    }
+    function draw(){
+      document.getElementById("hi").textContent="مرحباً "+(u.name||"");
+      document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+(u.grade||"");
+      var d=db();
+      var lives=mineLive(d);
+      document.getElementById("sched").innerHTML=lives.length?lives.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص في جدولك</div>';
+      var hws=mineHw(d);
+      document.getElementById("myhw").innerHTML=hws.length?hws.map(function(s){return '<div class="slot">'+s.title+'</div>';}).join(""):'<div class="slot">لا واجبات</div>';
+    }
+    document.getElementById("live-form").onsubmit=function(e){
+      e.preventDefault();
+      var d=db();
+      d.live_sessions.unshift({id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:u.grade||"",stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name});
+      save(d); e.target.reset(); draw();
+    };
+    document.getElementById("hw-form").onsubmit=function(e){
+      e.preventDefault();
+      var d=db();
+      d.assignments.unshift({id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:u.grade||"",title:document.getElementById("hw-title").value,topic:document.getElementById("hw-topic").value,due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[],teacher:u.name});
+      save(d); e.target.reset(); draw();
+    };
+    draw();
+  </script>
+</body>
+</html>

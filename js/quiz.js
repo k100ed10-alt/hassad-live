@@ -29,6 +29,7 @@ Hassad.saveHw=function(e){
   const image=(preview&&preview.style.display!=="none"&&preview.src)?preview.src:"";
   const questions=parseQuestions(el?el.value:"");
   const data=JSON.parse(localStorage.getItem("hassad-db"));
+  data.assignments=data.assignments||[];
   data.assignments.unshift({
     id:"a"+Date.now(),
     subject_id:document.getElementById("hw-subject").value,
@@ -52,14 +53,15 @@ Hassad.startQuiz=function(assignmentId){
   if(!box){location.href="subject.html?id="+(a?a.subject_id:"math");return;}
   if(!a){Hassad.toast("الواجب غير موجود");return;}
   Hassad.switchTab("hw", document.querySelectorAll(".tab")[2]||document.querySelector(".tab"));
+  data.submissions=data.submissions||{};
   const done=data.submissions[assignmentId+"_"+user.uid];
-  const img=a.image?`<img src="${a.image}" alt="ورقة العمل" style="width:100%;border-radius:16px;margin-bottom:12px">`:"";
+  const img=a.image?`<img src="${a.image}" alt="" style="width:100%;border-radius:16px;margin-bottom:12px">`:"";
   box.style.display="block";
   box.innerHTML=`<h3 style="color:var(--teal-900);margin-bottom:8px">${a.title}</h3>${img}<div id="quiz-body"></div><p class="hint" id="quiz-score"></p>`;
   const body=document.getElementById("quiz-body");
   const qs=a.questions||[];
   if(!qs.length){
-    body.innerHTML="<p class='hint'>الصورة مرفوعة. الأسئلة التفاعلية تُضاف بعد تحويل الصورة.</p>";
+    body.innerHTML="<p class='hint'>لا أسئلة تفاعلية بعد.</p>";
     return;
   }
   qs.forEach((item,qi)=>{
@@ -68,7 +70,7 @@ Hassad.startQuiz=function(assignmentId){
     div.innerHTML=`<strong>${arN(qi+1)}) ${item.q}</strong><div class="list" style="margin-top:8px">${item.opts.map((o,oi)=>`<button class="btn-outline qbtn" data-q="${qi}" data-o="${oi}" style="color:var(--teal-900);border-color:#d9d0bc;width:100%;text-align:right">${o}</button>`).join("")}</div>`;
     body.appendChild(div);
   });
-  if(done) document.getElementById("quiz-score").textContent=`سُجّل: ${arN(done.score||0)} من ${arN(done.total||qs.length)}`;
+  if(done) document.getElementById("quiz-score").textContent=`سُجِّل: ${arN(done.score||0)} من ${arN(done.total||qs.length)}`;
   const answers={};
   body.querySelectorAll(".qbtn").forEach(btn=>{
     btn.onclick=()=>{
@@ -83,6 +85,9 @@ Hassad.startQuiz=function(assignmentId){
         const correct=Object.values(answers).filter(Boolean).length;
         const pts=correct*10;
         data.submissions[assignmentId+"_"+user.uid]={status:"submitted",score:correct,total:qs.length,points:pts};
+        if(user.uid && data.students && data.students[user.uid]){
+          data.students[user.uid].points=(data.students[user.uid].points||0)+pts;
+        }
         localStorage.setItem("hassad-db",JSON.stringify(data));
         const prog=JSON.parse(localStorage.getItem("hassad-prog")||"{}");
         prog.points=(prog.points||0)+pts; localStorage.setItem("hassad-prog",JSON.stringify(prog));
@@ -94,14 +99,14 @@ Hassad.startQuiz=function(assignmentId){
 };
 const _rs=Hassad.renderSubject;
 Hassad.renderSubject=function(){
-  _rs();
+  if(_rs) _rs();
   const user=Hassad.currentUser(); if(!user) return;
   const id=new URLSearchParams(location.search).get("id")||"math";
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
   const hw=document.getElementById("hw"); if(!hw) return;
   hw.innerHTML=(data.assignments||[]).filter(a=>a.subject_id===id).map(a=>{
-    const sub=data.submissions[a.id+"_"+user.uid];
+    const sub=(data.submissions||{})[a.id+"_"+user.uid];
     const n=(a.questions||[]).length;
-    return `<div class="row"><div><strong>${a.title}</strong><div style="color:var(--muted);font-size:13px">${a.image?"صورة + ":""}${n?arN(n)+" أسئلة":"بانتظار التحويل"}</div></div><button class="btn" onclick="Hassad.startQuiz('${a.id}')">افتح النشاط</button></div>`;
+    return `<div class="row"><div><strong>${a.title}</strong><div style="color:var(--muted);font-size:13px">${n?arN(n)+" أسئلة":"واجب"}</div></div><button class="btn" onclick="Hassad.startQuiz('${a.id}')">افتح النشاط</button></div>`;
   }).join("")||"<p class='hint'>لا واجبات بعد</p>";
 };

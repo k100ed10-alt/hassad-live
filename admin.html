@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=16" />
+  <link rel="stylesheet" href="css/style.css?v=17" />
   <link rel="icon" href="assets/logo.svg">
   <style>
     input[type=checkbox]{width:20px;height:20px;accent-color:#0e5160}
@@ -30,23 +30,19 @@
       <section class="card" data-admin-only style="margin-bottom:16px;background:#e8f4f3">
         <h3 style="color:#0e5160">Firebase · onlineclass</h3>
         <p class="hint" id="fb-status">الصق كائن الويب من إعدادات المشروع</p>
-        <textarea class="ltr" id="fb-json" placeholder='{"apiKey":"...","authDomain":"onlineclass-d632d.firebaseapp.com","projectId":"onlineclass-d632d","storageBucket":"onlineclass-d632d.firebasestorage.app","messagingSenderId":"...","appId":"..."}'></textarea>
+        <textarea class="ltr" id="fb-json"></textarea>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn" onclick="Hassad.saveFbConfig()">حفظ الربط</button>
           <button type="button" class="btn-outline" onclick="Hassad.syncCloud()">رفع / جلب البيانات</button>
         </div>
         <p class="hint" id="fb-msg"></p>
       </section>
-      <section class="card" data-admin-only style="margin-bottom:16px;background:#fff4d6;border:2px solid #c9a227">
-        <h3 style="color:#7a4e00">مسح الكل</h3>
-        <button type="button" class="btn" style="background:#b42318" onclick="clearHassadData()">مسح كل البيانات المحلية</button>
-      </section>
       <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
-        <h3 style="color:var(--teal-900);margin-bottom:10px">إنشاء معلم</h3>
+        <h3>إنشاء معلم</h3>
+        <p class="hint">كلمة المرور تُولَّد تلقائياً عند الحفظ</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
           <div class="field"><label>البريد</label><input id="tc-email" type="email" required></div>
-          <div class="field"><label>كلمة المرور</label><input id="tc-pass" required minlength="6"></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
           <div class="field"><label>الصف</label><select id="tc-grade"></select></div>
         </div>
@@ -55,6 +51,7 @@
       </form>
       <section class="card" data-admin-only style="margin-bottom:16px">
         <h3>إضافة دفعة طلاب</h3>
+        <p class="hint">الصق الأسماء فقط. البريد وكلمة المرور يُولَّدان تلقائياً — ثم حمّل الكشف.</p>
         <div class="field"><label>الصف</label><select id="bulk-grade"></select></div>
         <div class="field"><label>الأسماء</label><textarea id="bulk-names" rows="6"></textarea></div>
         <button type="button" class="btn" onclick="Hassad.bulkCreate()">أنشئ الحسابات</button>
@@ -63,13 +60,12 @@
       </section>
       <form class="card" data-admin-only style="margin-bottom:16px" onsubmit="Hassad.createStudent(event)">
         <h3>طالب واحد</h3>
+        <p class="hint">لا تكتب كلمة المرور. الصفحة تولّدها وتظهرها هنا بعد الحفظ.</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="st-name" required></div>
           <div class="field"><label>الصف</label><select id="st-grade" required></select></div>
           <div class="field"><label>البريد</label><input id="st-email" type="email" required></div>
-          <div class="field"><label>كلمة المرور</label><input id="st-pass" required minlength="6"></div>
         </div>
-        <button type="button" class="btn-outline" onclick="document.getElementById('st-pass').value=Hassad.genPassword()">توليد</button>
         <button class="btn">حفظ</button>
         <p class="hint" id="new-cred"></p>
       </form>
@@ -124,24 +120,18 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=16"></script>
-  <script src="js/fb.js?v=16"></script>
-  <script src="js/app.js?v=16"></script>
-  <script src="js/roles.js?v=16"></script>
-  <script src="js/fb-hooks.js?v=16"></script>
-  <script src="js/quiz.js?v=16"></script>
-  <script src="js/vision.js?v=16"></script>
-  <script src="js/admin-delete.js?v=16"></script>
-  <script src="js/grade-filter.js?v=16"></script>
-  <script src="js/bulk-students.js?v=16"></script>
-  <script src="js/live-plus.js?v=16"></script>
+  <script src="js/firebase-config.js?v=17"></script>
+  <script src="js/fb.js?v=17"></script>
+  <script src="js/app.js?v=17"></script>
+  <script src="js/roles.js?v=17"></script>
+  <script src="js/fb-hooks.js?v=17"></script>
+  <script src="js/quiz.js?v=17"></script>
+  <script src="js/vision.js?v=17"></script>
+  <script src="js/admin-delete.js?v=17"></script>
+  <script src="js/grade-filter.js?v=17"></script>
+  <script src="js/bulk-students.js?v=17"></script>
+  <script src="js/live-plus.js?v=17"></script>
   <script>
-    function clearHassadData(){
-      if(!confirm("مسح المحلي فقط؟")) return;
-      const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
-      data.students={};data.assignments=[];data.live_sessions=[];data.lessons=[];data.submissions={};
-      localStorage.setItem("hassad-db",JSON.stringify(data)); location.reload();
-    }
     Hassad.renderAdmin();
     if(window.HassadFB){
       HassadFB.init().then(function(){

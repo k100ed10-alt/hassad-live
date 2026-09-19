@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Cache-Control" content="no-cache" />
   <title>لوحة المعلم | حَصاد</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -18,6 +17,7 @@
     .btn{width:100%;margin-top:12px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
     .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px}
     .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
+    #hw-preview{display:none;width:100%;border-radius:12px;margin-top:8px;max-height:220px;object-fit:contain;background:#faf6ea}
   </style>
 </head>
 <body>
@@ -37,11 +37,18 @@
   </form>
 
   <form class="card" id="hw-form">
-    <h3>إضافة واجب</h3>
+    <h3>إضافة واجب تفاعلي</h3>
     <label>العنوان</label><input id="hw-title" required>
-    <label>موضوع الواجب</label><textarea id="hw-topic" rows="3"></textarea>
+    <label>صورة الواجب</label>
+    <input id="hw-file" type="file" accept="image/*">
+    <img id="hw-preview" alt="">
+    <label>موضوع / أسئلة</label>
+    <textarea id="hw-topic" rows="4" placeholder="مثل: الكسور — أو اكتب الأسئلة"></textarea>
     <label>آخر موعد</label><input id="hw-due" type="date" required>
-    <button class="btn">نشر الواجب</button>
+    <label>مفتاح xAI (اختياري لتحويل الصورة)</label>
+    <input id="xai-key" type="password" dir="ltr" placeholder="xai-...">
+    <p class="muted" id="hw-status"></p>
+    <button class="btn">حوّل لنشاط وانشر</button>
   </form>
 
   <div class="card">
@@ -57,9 +64,12 @@
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
-    if(!u){ location.href="login.html?as=teacher"; }
-    else if(u.role==="admin"){ location.href="admin.html"; }
-    else if(u.role!=="teacher"){ location.href="home.html"; }
+    if(!u) location.href="login.html?as=teacher";
+    else if(u.role==="admin") location.href="admin.html";
+    else if(u.role!=="teacher") location.href="home.html";
+    var imgData="";
+    var xk=document.getElementById("xai-key");
+    if(xk) xk.value=localStorage.getItem("hassad-xai-key")||"";
     function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
     function when(date,hour){
@@ -70,15 +80,8 @@
       if(hour && hour.indexOf(":")>=0){ var hh=+hour.split(":")[0], mm=hour.split(":")[1]; var ap=hh>=12?"مساء":"صباح"; hh=hh%12||12; clock=hh+":"+mm+" "+ap; }
       return DAYS[dt.getDay()]+" "+p[2]+"/"+p[1]+" — "+clock;
     }
-    function mineLive(d){
-      return (d.live_sessions||[]).filter(function(s){
-        if(u.subject_id && s.subject_id && s.subject_id!==u.subject_id) return false;
-        if(u.grade && s.grade && s.grade!==u.grade) return false;
-        return true;
-      });
-    }
-    function mineHw(d){
-      return (d.assignments||[]).filter(function(s){
+    function mine(list){
+      return (list||[]).filter(function(s){
         if(u.subject_id && s.subject_id && s.subject_id!==u.subject_id) return false;
         if(u.grade && s.grade && s.grade!==u.grade) return false;
         return true;
@@ -88,10 +91,76 @@
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
       document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+(u.grade||"");
       var d=db();
-      var lives=mineLive(d);
-      document.getElementById("sched").innerHTML=lives.length?lives.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص في جدولك</div>';
-      var hws=mineHw(d);
-      document.getElementById("myhw").innerHTML=hws.length?hws.map(function(s){return '<div class="slot">'+s.title+'</div>';}).join(""):'<div class="slot">لا واجبات</div>';
+      var lives=mine(d.live_sessions);
+      document.getElementById("sched").innerHTML=lives.length?lives.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص</div>';
+      var hws=mine(d.assignments);
+      document.getElementById("myhw").innerHTML=hws.length?hws.map(function(s){return '<div class="slot">'+s.title+' · '+((s.questions||[]).length)+' أسئلة · 10 نقاط/سؤال</div>';}).join(""):'<div class="slot">لا واجبات</div>';
+    }
+    function compress(file){
+      return new Promise(function(resolve){
+        var r=new FileReader();
+        r.onload=function(){
+          var im=new Image();
+          im.onload=function(){
+            var c=document.createElement("canvas");
+            var w=im.width,h=im.height,max=900;
+            if(w>max){h=Math.round(h*max/w);w=max;}
+            c.width=w;c.height=h;
+            c.getContext("2d").drawImage(im,0,0,w,h);
+            resolve(c.toDataURL("image/jpeg",0.72));
+          };
+          im.src=r.result;
+        };
+        r.readAsDataURL(file);
+      });
+    }
+    document.getElementById("hw-file").onchange=async function(){
+      var f=this.files&&this.files[0]; if(!f) return;
+      imgData=await compress(f);
+      var p=document.getElementById("hw-preview");
+      p.src=imgData; p.style.display="block";
+    };
+    function parseQs(text){
+      var raw=(text||"").trim(); if(!raw) return [];
+      var blocks=raw.split(/\n\s*\n/).map(function(b){return b.trim();}).filter(Boolean);
+      var out=[];
+      blocks.forEach(function(block){
+        var lines=block.split(/\n/).map(function(l){return l.trim();}).filter(Boolean);
+        if(lines.length<3) return;
+        var q=lines[0].replace(/^\d+[\.\)\-]\s*/,"");
+        var opts=[], ok=0;
+        lines.slice(1).forEach(function(line){
+          var m=line.match(/^(?:[-*]|[A-Da-d1-4\u0623\u0628جد]\))\s*(.+)$/);
+          if(!m) return;
+          var t=m[1].replace(/\s*(\*|صحيح)\s*$/,"").trim();
+          if(/\*|صحيح/.test(line)) ok=opts.length;
+          opts.push(t);
+        });
+        if(q && opts.length>=2) out.push({q:q,opts:opts,ok:ok});
+      });
+      return out;
+    }
+    function localQs(topic,grade){
+      var t=topic||"الدرس";
+      return [
+        {q:"ما موضوع هذا النشاط؟",opts:[t,"موضوع آخر","بدون علاقة","لا أعرف"],ok:0},
+        {q:"هذا النشاط موجَّه لـ "+(grade||"صفك")+". هل راجعت الصورة؟",opts:["نعم","لا"],ok:0},
+        {q:"كم نقطة لكل إجابة صحيحة؟",opts:["10","1","100","0"],ok:0}
+      ];
+    }
+    async function xaiQs(topic,image,key){
+      var content=[{type:"text",text:"حوّل هذه الورقة إلى 5 أسئلة اختيار من متعدد بالعربية. أرجع JSON فقط: [{\"q\":\"\",\"opts\":[\"\",\"\",\"\",\"\"],\"ok\":0}] موضوع: "+topic}];
+      if(image) content.push({type:"image_url",image_url:{url:image}});
+      var res=await fetch("https://api.x.ai/v1/chat/completions",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+        body:JSON.stringify({model:"grok-2-vision-1212",temperature:0.3,messages:[{role:"user",content:content}]})
+      });
+      if(!res.ok) throw new Error("xai");
+      var json=await res.json();
+      var text=(((json.choices||[])[0]||{}).message||{}).content||"";
+      var m=text.match(/\[[\s\S]*\]/); if(!m) throw new Error("nojson");
+      return JSON.parse(m[0]).filter(function(x){return x&&x.q&&x.opts&&x.opts.length>=2;}).map(function(x){return {q:String(x.q),opts:x.opts.map(String),ok:Number(x.ok)||0};});
     }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault();
@@ -99,11 +168,38 @@
       d.live_sessions.unshift({id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:u.grade||"",stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name});
       save(d); e.target.reset(); draw();
     };
-    document.getElementById("hw-form").onsubmit=function(e){
+    document.getElementById("hw-form").onsubmit=async function(e){
       e.preventDefault();
+      var topic=document.getElementById("hw-topic").value.trim();
+      var key=(document.getElementById("xai-key").value||"").trim();
+      if(key) localStorage.setItem("hassad-xai-key",key);
+      var st=document.getElementById("hw-status");
+      var questions=parseQs(topic);
+      if(!questions.length && key){
+        st.textContent="جارٍ تحويل الصورة/الموضوع إلى أسئلة...";
+        try{ questions=await xaiQs(topic,imgData,key); }catch(err){ st.textContent="تعذّر xAI — سيُنشر الصورة مع أسئلة أساسية."; }
+      }
+      if(!questions.length) questions=localQs(topic,u.grade);
       var d=db();
-      d.assignments.unshift({id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:u.grade||"",title:document.getElementById("hw-title").value,topic:document.getElementById("hw-topic").value,due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[],teacher:u.name});
-      save(d); e.target.reset(); draw();
+      d.assignments.unshift({
+        id:"a"+Date.now(),
+        subject_id:u.subject_id||"math",
+        grade:u.grade||"",
+        title:document.getElementById("hw-title").value,
+        topic:topic,
+        image:imgData||"",
+        due_date:document.getElementById("hw-due").value,
+        created_at:new Date().toISOString().slice(0,10),
+        questions:questions,
+        points_each:10,
+        teacher:u.name
+      });
+      save(d);
+      st.textContent="نُشر: "+questions.length+" أسئلة — 10 نقاط لكل إجابة صحيحة";
+      e.target.reset();
+      imgData="";
+      document.getElementById("hw-preview").style.display="none";
+      draw();
     };
     draw();
   </script>

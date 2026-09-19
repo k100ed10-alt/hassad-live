@@ -51,10 +51,11 @@ Hassad.createTeacher=function(e){
   const data=ensureTeachers();
   const email=document.getElementById("tc-email").value.trim().toLowerCase();
   const uid="tch_"+Date.now();
-  const rec={name:document.getElementById("tc-name").value.trim(),email,password:document.getElementById("tc-pass").value.trim(),subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
+  const password=(Hassad.genPassword&&Hassad.genPassword())||("Hs-"+Math.random().toString(36).slice(2,8));
+  const rec={name:document.getElementById("tc-name").value.trim(),email,password,subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
-  document.getElementById("tc-msg").textContent="حُفظ: "+email;
+  document.getElementById("tc-msg").textContent="وُلِّدت الكلمة تلقائياً. أرسل للمعلم: "+email+" / "+password;
   if(window.HassadFB) HassadFB.init().then(function(){ HassadFB.put("teachers", uid, rec); });
 };
 Hassad.applyRoleUI=function(){

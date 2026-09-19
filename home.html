@@ -15,20 +15,12 @@
     .pills span{padding:7px 12px;border-radius:999px;font-weight:800;font-size:14px}
     .p1{background:#fff3c4}.p2{background:#ffd6db}.p3{background:#d7eefe}
     .week{background:#0e5160;color:#fff;border-radius:18px;padding:14px;margin-bottom:12px}
-    .slot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
-    .when{background:#ead9a0;color:#06262e;border-radius:999px;padding:4px 10px;font-weight:800;font-size:12px}
+    .slot{padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
     .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-    .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123;display:flex;flex-direction:column;justify-content:space-between}
-    .sub small{opacity:.75}
+    .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123}
     .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
-    .rank{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #eee3cc}
-    .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
-    .gold b{background:#ead9a0}
-    .hw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee3cc}
-    .hw a,.more{background:#0e5160;color:#fff;text-decoration:none;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
-    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-    .cloud{font-size:12px;color:#5c6b70;margin-bottom:8px}
+    .admin{display:none;background:#0e5160;color:#fff;border-radius:12px;padding:10px 14px;text-decoration:none;font-weight:800}
   </style>
 </head>
 <body>
@@ -39,72 +31,39 @@
     <a href="subject.html?id=arabic">عربية</a>
     <a href="subject.html?id=science">علوم</a>
   </header>
+  <a class="admin" id="to-admin" href="admin.html">لوحة التحكم</a>
   <h1 id="hi">مرحباً</h1>
-  <div class="cloud" id="cloud"></div>
   <div class="pills">
     <span class="p1">★ ٤٠ نقطة</span>
     <span class="p2">🔥 ٥ أيام</span>
     <span class="p3" id="gr"></span>
   </div>
-  <div class="week">
-    <strong>حصص الأسبوع</strong>
-    <div id="week"></div>
-  </div>
+  <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
   <div class="subs">
-    <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong><small>أ. خالد</small></a>
-    <a class="sub i" href="subject.html?id=islamic"><strong>الإسلامية</strong><small>أ. فاطمة</small></a>
-    <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong><small>أ. سعيد</small></a>
-    <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong><small>أ. مريم</small></a>
+    <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong></a>
+    <a class="sub i" href="subject.html?id=islamic"><strong>الإسلامية</strong></a>
+    <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong></a>
+    <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong></a>
   </div>
-  <div class="box">
-    <div class="head"><strong>متصدرو الصف</strong><a class="more" href="leaders.html">الكل</a></div>
-    <div id="board"></div>
-  </div>
-  <div class="box">
-    <strong>واجبات صفك</strong>
-    <div id="hw"></div>
-  </div>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=19"></script>
-  <script src="js/fb.js?v=19"></script>
+  <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
+  <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
-    var mail=(u&&u.email||"").toLowerCase();
-    var role=(u&&u.role||"").toLowerCase();
-    var nm=(u&&u.name||"").toLowerCase();
-    var staff=role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1;
-    if(staff){
-      u=u||{}; u.role="admin"; u.name=u.name||"مدير حَصاد";
-      localStorage.setItem("hassad-user", JSON.stringify(u));
-      location.replace("admin.html");
-    } else {
-      if(u){document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||"";}
-      function paint(){
-        var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-        var sessions=(data.live_sessions||[]).filter(function(s){return s.status!=="completed" && (!u||!s.grade||!u.grade||s.grade===u.grade);});
-        document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot"><div><b>'+s.title+'</b></div><span class="when">'+(s.scheduled_time||"موعد")+'</span></div>';}).join(""):'<div class="slot"><span>لا حصص هذا الأسبوع</span></div>';
-        var hws=(data.assignments||[]).filter(function(a){return !u||!a.grade||!u.grade||a.grade===u.grade;});
-        document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="hw"><div><b>'+a.title+'</b></div><a href="subject.html?id='+(a.subject_id||"math")+'">فتح</a></div>';}).join(""):'<div class="hw"><span>لا واجبات جديدة</span></div>';
-        var board=[];
-        Object.keys(data.students||{}).forEach(function(id){
-          var s=data.students[id];
-          if(!u||!u.grade||!s.grade||s.grade===u.grade) board.push({name:s.name,pts:s.points||0});
-        });
-        if(!board.length) board=[{name:(u&&u.name)||"طالب",pts:0}];
-        board.sort(function(a,b){return b.pts-a.pts});
-        board=board.slice(0,3);
-        document.getElementById("board").innerHTML=board.map(function(r,i){return '<div class="rank '+(i===0?"gold":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+(i+1)+'</b> '+r.name+'</span><span>★ '+r.pts+'</span></div>';}).join("");
-      }
-      paint();
-      if(window.HassadFB){
-        HassadFB.init().then(function(ok){
-          document.getElementById("cloud").textContent = ok ? "متصل بسحابة onlineclass" : HassadFB.status;
-          if(ok) HassadFB.pull().then(paint);
-        });
+    if(u){
+      document.getElementById("hi").textContent="مرحباً "+(u.name||"");
+      document.getElementById("gr").textContent=u.grade||"";
+      var role=(u.role||"").toLowerCase();
+      var mail=(u.email||"").toLowerCase();
+      if(role==="admin"||role==="teacher"||mail.indexOf("admin@")===0){
+        document.getElementById("to-admin").style.display="inline-block";
       }
     }
+    var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+    var sessions=data.live_sessions||[];
+    document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
+    var hws=data.assignments||[];
+    document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot">'+a.title+'</div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+    document.getElementById("board").innerHTML='<div class="slot">—</div>';
   </script>
 </body>
 </html>

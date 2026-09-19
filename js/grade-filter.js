@@ -1,4 +1,4 @@
-const GRADES=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر"];
+const GRADES=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
 function fillGradeSelects(){
   ["hw-grade","live-grade","st-grade"].forEach(id=>{
     const el=document.getElementById(id); if(!el||el.tagName!=="SELECT") return;

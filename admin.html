@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=32" />
+  <link rel="stylesheet" href="css/style.css?v=33" />
   <script>
     try{
       var _u=JSON.parse(localStorage.getItem("hassad-user")||"null");
@@ -23,6 +23,12 @@
     </aside>
     <main class="main">
       <div class="topbar"><h1>لوحة المدير</h1></div>
+      <form class="card" style="margin-bottom:16px" onsubmit="event.preventDefault();localStorage.setItem('hassad-xai-key',document.getElementById('xai-key').value.trim());Hassad.toast?Hassad.toast('حُفظ المفتاح'):alert('حُفظ المفتاح');">
+        <h3>مفتاح xAI</h3>
+        <p class="hint">للمدير فقط — لتحويل صور الواجب إلى أسئلة.</p>
+        <div class="field"><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
+        <button class="btn">حفظ المفتاح</button>
+      </form>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3>إنشاء معلم</h3>
         <div class="grid-2">
@@ -49,9 +55,9 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=32"></script>
-  <script src="js/roles.js?v=32"></script>
-  <script src="js/grade-filter.js?v=32"></script>
+  <script src="js/app.js?v=33"></script>
+  <script src="js/roles.js?v=33"></script>
+  <script src="js/grade-filter.js?v=33"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["tc-grade","view-grade"].forEach(function(id){
@@ -62,6 +68,7 @@
     if(ts && !ts.options.length){
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
+    var xk=document.getElementById("xai-key"); if(xk) xk.value=localStorage.getItem("hassad-xai-key")||"";
     if(typeof fillGradeSelects==="function") fillGradeSelects();
     if(Hassad.renderAdmin) Hassad.renderAdmin();
     if(Hassad.renderTeachers) Hassad.renderTeachers();

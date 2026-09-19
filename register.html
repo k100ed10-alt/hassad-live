@@ -8,7 +8,7 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;min-height:100vh;padding:20px}
     .wrap{max-width:420px;margin:0 auto}
-    .logo{text-align:center;margin:12px 0 18px}
+    .logo{text-align:center;margin:12px 0 18px;text-decoration:none;display:block}
     .logo b{display:block;font-size:22px;color:#0e5160;margin-top:6px}
     .card{background:#fff;border:1px solid #e4d9bf;border-radius:20px;padding:20px}
     h1{font-size:20px;color:#0e5160;margin-bottom:6px}
@@ -28,10 +28,10 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="logo">
-      <img src="assets/logo.svg" alt="" width="72" height="90" style="object-fit:contain">
+    <a class="logo" href="index.html">
+      <img src="assets/logo.svg" alt="حَصاد" width="72" height="90" style="object-fit:contain">
       <b>منصة حَصاد</b>
-    </div>
+    </a>
     <form class="card" id="form">
       <h1>أنشئ حسابك</h1>
       <p class="hint">اكتب اسمك ورقم هاتفك وصفك. الصفحة تولّد البريد وكلمة المرور وتربطهما برقمك.</p>
@@ -64,10 +64,6 @@
     </div>
     <p class="links"><a href="login.html">عندي حساب مسبقاً</a></p>
   </div>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=22"></script>
-  <script src="js/fb.js?v=22"></script>
-  <script src="js/register.js?v=22"></script>
+  <script src="js/register.js?v=24"></script>
 </body>
 </html>

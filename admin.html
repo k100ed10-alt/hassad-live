@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=29" />
+  <link rel="stylesheet" href="css/style.css?v=30" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="admin.html" style="color:#ead9a0">حَصاد · إدارة</a>
+      <a class="brand" href="admin.html?v=30" style="color:#ead9a0">حَصاد · إدارة</a>
       <nav class="side-nav">
-        <a class="active" href="admin.html">اللوحة</a>
+        <a class="active" href="admin.html?v=30">اللوحة</a>
         <a href="#" onclick="Hassad.logout()">خروج</a>
       </nav>
     </aside>
@@ -26,13 +27,13 @@
           <div class="field"><label>البريد</label><input id="tc-email" type="email" required placeholder="name@hassad.om"></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
           <div class="field"><label>الصف</label><select id="tc-grade"></select></div>
-          <div class="field"><label>كلمة المرور (تولَّد تلقائياً)</label><input id="tc-pass" readonly dir="ltr" placeholder="تظهر بعد الحفظ"></div>
+          <div class="field"><label>كلمة المرور المولَّدة</label><input id="tc-pass" readonly dir="ltr" placeholder="تظهر بعد الحفظ"></div>
         </div>
-        <button class="btn">حفظ وولّد الكلمة</button>
+        <button class="btn">حفظ وولّد كلمة المرور</button>
         <p class="hint" id="tc-msg"></p>
       </form>
       <section class="card" style="margin-bottom:16px">
-        <h3>المعلمون</h3>
+        <h3>المعلمون وكلمات مرورهم</h3>
         <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th>الصف</th></tr></thead><tbody id="teachers"></tbody></table>
       </section>
       <div class="grid-2">
@@ -76,11 +77,11 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=29"></script>
-  <script src="js/roles.js?v=29"></script>
-  <script src="js/grade-filter.js?v=29"></script>
-  <script src="js/quiz.js?v=29"></script>
-  <script src="js/xai-hw.js?v=29"></script>
+  <script src="js/app.js?v=30"></script>
+  <script src="js/roles.js?v=30"></script>
+  <script src="js/grade-filter.js?v=30"></script>
+  <script src="js/quiz.js?v=30"></script>
+  <script src="js/xai-hw.js?v=30"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     ["tc-grade","view-grade"].forEach(function(id){

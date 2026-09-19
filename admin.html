@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=25" />
+  <link rel="stylesheet" href="css/style.css?v=26" />
   <link rel="icon" href="assets/logo.svg">
 </head>
 <body>
@@ -59,8 +59,14 @@
           <button class="btn">نشر</button>
         </form>
       </div>
-      <h2 style="margin:20px 0 8px">الطلاب حسب الصف</h2>
-      <div id="students-by-grade"></div>
+      <section class="card" style="margin-top:16px">
+        <h3>الطلاب حسب الصف</h3>
+        <div class="field"><label>اختر الصف</label>
+          <select id="view-grade" onchange="Hassad.renderAdmin()"></select>
+        </div>
+        <p class="hint" id="grade-count"></p>
+        <table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>كلمة المرور</th></tr></thead><tbody id="students"></tbody></table>
+      </section>
       <section class="card" style="margin-top:16px">
         <h3>الحصص</h3>
         <table class="table"><thead><tr><th>المادة</th><th>العنوان</th><th>الوقت</th><th>الرابط</th></tr></thead><tbody id="live-table"></tbody></table>
@@ -71,19 +77,21 @@
       </section>
     </main>
   </div>
-  <script src="js/app.js?v=25"></script>
-  <script src="js/roles.js?v=25"></script>
-  <script src="js/grade-filter.js?v=25"></script>
+  <script src="js/app.js?v=26"></script>
+  <script src="js/roles.js?v=26"></script>
+  <script src="js/grade-filter.js?v=26"></script>
   <script>
-    if(Hassad.renderAdmin) Hassad.renderAdmin();
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
-    var tc=document.getElementById("tc-grade");
-    if(tc && !tc.options.length) grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;tc.appendChild(o)});
+    ["tc-grade","view-grade"].forEach(function(id){
+      var el=document.getElementById(id); if(!el||el.options.length) return;
+      grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;el.appendChild(o)});
+    });
     var ts=document.getElementById("tc-subject");
     if(ts && !ts.options.length){
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
     if(typeof fillGradeSelects==="function") fillGradeSelects();
+    if(Hassad.renderAdmin) Hassad.renderAdmin();
   </script>
 </body>
 </html>

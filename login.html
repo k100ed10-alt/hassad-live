@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=39" />
+  <link rel="stylesheet" href="css/style.css?v=50" />
 </head>
 <body>
   <nav class="nav">
@@ -18,7 +18,7 @@
       <img src="assets/logo.svg" alt="حَصاد" style="width:88px;height:112px;object-fit:contain;margin:0 auto 8px">
       <h1 id="ttl">دخول الطالب</h1>
       <p id="sub" style="color:var(--muted);margin-bottom:18px">اكتب رقم هاتفك وكلمة المرور</p>
-      <div class="field"><label id="lab">رقم الهاتف</label><input id="email" required inputmode="tel" placeholder="9689xxxxxxx" autocomplete="username"></div>
+      <div class="field"><label id="lab">رقم الهاتف</label><input id="email" required inputmode="tel" placeholder="97787130" autocomplete="username"></div>
       <div class="field"><label>كلمة المرور</label><input id="password" type="password" required autocomplete="current-password"></div>
       <p class="error" id="login-error"></p>
       <button class="btn" style="width:100%">دخول</button>
@@ -28,15 +28,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=39"></script>
-  <script src="js/fb.js?v=39"></script>
-  <script src="js/app.js?v=39"></script>
-  <script src="js/roles.js?v=39"></script>
+  <script src="js/firebase-config.js?v=50"></script>
+  <script src="js/fb.js?v=50"></script>
+  <script src="js/app.js?v=50"></script>
+  <script src="js/roles.js?v=50"></script>
   <script>
     var as=new URLSearchParams(location.search).get("as");
     if(as==="teacher"){
       document.getElementById("ttl").textContent="دخول المعلم";
-      document.getElementById("sub").textContent="اكتب رقم هاتفك وكلمة المرور. لا حاجة للبريد.";
+      document.getElementById("sub").textContent="اكتب رقم هاتفك وكلمة المرور.";
       document.getElementById("lab").textContent="رقم هاتف المعلم";
       document.getElementById("hint").innerHTML="";
     }

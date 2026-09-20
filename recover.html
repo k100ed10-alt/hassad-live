@@ -2,8 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>استعادة الحساب | حَصاد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>استعادة | حَصاد</title>
   <style>
     *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428}
     .wrap{max-width:420px;margin:40px auto;padding:16px}
@@ -15,33 +16,32 @@
     button{width:100%;margin-top:14px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
     .box{margin-top:14px;background:#06262e;color:#fff;border-radius:12px;padding:14px;display:none}
     .box b{display:block;margin:4px 0 8px;word-break:break-all;direction:ltr}
-    .copy{width:auto;margin:0 0 10px;background:#ead9a0;color:#06262e;padding:6px 10px;border-radius:8px;font-size:13px}
+    .copy{width:auto;background:#ead9a0;color:#06262e;padding:6px 10px;border-radius:8px}
     a{color:#0e5160}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>نسيت كلمة المرور؟</h1>
-      <p>نظهر كلمة المرور المحفوظة في السحابة. نفس الكلمة في كل المتصفحات.</p>
+      <h1>كلمة مرور موحدة</h1>
+      <p>إذا كان الحساب في السحابة نظهره. إن لم يكن ننشئه هنا ليعمل في كل المتصفحات.</p>
       <label>رقم الهاتف</label>
       <input id="phone" inputmode="tel" placeholder="97787130">
-      <button type="button" onclick="go()">استعادة</button>
+      <button type="button" onclick="go()">اظهر / أنشئ في السحابة</button>
       <p id="err" style="color:#b42318"></p>
       <div class="box" id="box">
         <div>البريد</div><b id="em"></b>
-        <div>كلمة المرور</div><b id="pw"></b>
-        <button class="copy" type="button" onclick="cp('pw',this)">نسخ الكلمة</button>
-        <p style="color:#ead9a0">ادخل بهذه الكلمة من أي متصفح · <a href="login.html" style="color:#ead9a0">الدخول</a></p>
+        <div>كلمة المرور لكل الأجهزة</div><b id="pw"></b>
+        <button class="copy" type="button" onclick="cp()">نسخ الكلمة</button>
+        <p style="color:#ead9a0"><a href="login.html" style="color:#ead9a0">ادخل الآن</a></p>
       </div>
-      <p><a href="login.html">رجوع للدخول</a></p>
     </div>
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=52"></script>
-  <script src="js/fb.js?v=52"></script>
+  <script src="js/firebase-config.js?v=53"></script>
+  <script src="js/fb.js?v=53"></script>
   <script>
     function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
     function norm(raw){
@@ -55,10 +55,10 @@
       var x=digits(a), y=digits(b);
       return x && y && (x===y || x.slice(-8)===y.slice(-8));
     }
-    function cp(id,btn){
-      var t=document.getElementById(id).textContent;
-      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t);
-      btn.textContent="نُسخ";
+    function gen(){var a="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";var s="Hs-";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+    function cp(){
+      var t=document.getElementById("pw").textContent;
+      if(navigator.clipboard) navigator.clipboard.writeText(t);
     }
     function show(email, pass){
       document.getElementById("em").textContent=email;
@@ -69,8 +69,10 @@
       var phone=norm(document.getElementById("phone").value);
       var err=document.getElementById("err"); err.textContent="";
       document.getElementById("box").style.display="none";
-      if(!phone){ err.textContent="اكتب رقم الهاتف"; return; }
-      err.textContent="جارٍ البحث في السحابة...";
+      if(!phone || phone.length<8){ err.textContent="اكتب رقم الهاتف"; return; }
+      var uid="phone_"+phone;
+      var email="s"+phone+"@hassad.om";
+      err.textContent="جارٍ الربط بالسحابة...";
       HassadFB.init().then(function(){
         return HassadFB.db.collection("students").get();
       }).then(function(snap){
@@ -79,13 +81,17 @@
           var s=Object.assign({id:doc.id}, doc.data());
           if(matchPhone(s.phone||doc.id, phone)) found=s;
         });
-        if(!found || !found.password){
-          err.textContent="لا حساب لهذا الرقم على السحابة.";
+        if(found && found.password){
+          err.textContent="";
+          show(found.email||email, found.password);
           return;
         }
-        err.textContent="";
-        show(found.email||("s"+phone+"@hassad.om"), found.password);
-      }).catch(function(){ err.textContent="تعذّر الاتصال بالسحابة."; });
+        var rec={name:found&&found.name||"طالب",phone:phone,email:email,password:gen(),grade:(found&&found.grade)||"الصف الخامس",subscription_status:"active",points:0,streak:0};
+        return HassadFB.put("students", uid, rec).then(function(){
+          err.textContent="";
+          show(email, rec.password);
+        });
+      }).catch(function(e){ err.textContent="تعذّر الحفظ. تأكد من Authorized domains وAnonymous. "+(e&&e.message||""); });
     }
   </script>
 </body>

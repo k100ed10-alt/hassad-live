@@ -18,7 +18,7 @@
     .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px}
     .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
     .ok{color:#157347;font-weight:800}
-    .bad{color:#b42318;font-weight:800}
+    .q{background:#f7f1df;border-radius:12px;padding:10px;margin:8px 0}
   </style>
 </head>
 <body>
@@ -28,29 +28,39 @@
   </header>
   <p class="muted" id="meta"></p>
   <p id="pub"></p>
+  <div class="card">
+    <h3>أسئلة الطلاب</h3>
+    <p class="muted">تظهر هنا رسائل «اسأل المعلم»</p>
+    <div id="qs">لا أسئلة بعد</div>
+  </div>
+  <form class="card" id="lesson-form">
+    <h3>إضافة درس</h3>
+    <label>عنوان الدرس</label><input id="ls-title" required>
+    <label>رابط أو ملاحظة</label><input id="ls-note">
+    <button class="btn">نشر الدرس للطلاب</button>
+  </form>
   <form class="card" id="live-form">
     <h3>إضافة حصة</h3>
     <label>لأي صف؟</label><select id="live-grade"></select>
     <label>العنوان</label><input id="live-title" required>
     <label>التاريخ</label><input id="live-date" type="date" required>
     <label>الوقت</label><input id="live-hour" type="time" required>
-    <label>رابط البث</label><input id="live-embed" dir="ltr" value="https://www.youtube.com/watch?v=nCgI8rjOWUw">
-    <button class="btn">نشر الحصة للطلاب</button>
+    <label>رابط البث</label><input id="live-embed" dir="ltr">
+    <button class="btn">نشر الحصة</button>
   </form>
   <form class="card" id="hw-form">
     <h3>إضافة واجب</h3>
     <label>لأي صف؟</label><select id="hw-grade"></select>
     <label>العنوان</label><input id="hw-title" required>
     <label>آخر موعد</label><input id="hw-due" type="date" required>
-    <p class="muted" id="hw-status"></p>
     <button class="btn">نشر الواجب</button>
   </form>
   <div class="card"><h3>جدولي</h3><div id="sched"></div></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=42"></script>
-  <script src="js/fb.js?v=42"></script>
+  <script src="js/firebase-config.js?v=44"></script>
+  <script src="js/fb.js?v=44"></script>
   <script>
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -63,16 +73,14 @@
       var el=document.getElementById(id);
       myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
     });
-    function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
+    function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; d.lessons=d.lessons||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
     function say(ok,msg){ var el=document.getElementById("pub"); el.className=ok?"ok":"bad"; el.textContent=msg; }
     function yt(src){
       var m=String(src||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
       return m ? "https://www.youtube.com/watch?v="+m[1] : String(src||"").trim();
     }
-    function cloud(col,item){
-      return HassadFB.put(col, item.id, item).then(function(){ say(true,"وصل للطلاب: "+item.title); }).catch(function(e){ say(false,"لم يُرفع. "+(e&&e.message||"")); });
-    }
+    function cloud(col,item){ return HassadFB.put(col, item.id, item).then(function(){ say(true,"وصل للطلاب: "+(item.title||"")); }).catch(function(e){ say(false,e&&e.message||"فشل"); }); }
     function when(date,hour){
       if(!date) return hour||"";
       var p=date.split("-").map(Number); var dt=new Date(p[0],p[1]-1,p[2]); var clock=hour||"";
@@ -91,6 +99,21 @@
       document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+myGrades.join(" · ");
       document.getElementById("sched").innerHTML=mine(db().live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
     }
+    function loadQs(){
+      if(!HassadFB.db) return;
+      HassadFB.db.collection("messages").get().then(function(snap){
+        var rows=[];
+        snap.forEach(function(doc){
+          var m=doc.data()||{};
+          if(u.subject_id && m.subject_id && m.subject_id!==u.subject_id) return;
+          rows.push(m);
+        });
+        rows.sort(function(a,b){return (b.at||0)-(a.at||0);});
+        document.getElementById("qs").innerHTML=rows.length?rows.map(function(m){
+          return '<div class="q"><b>'+(m.name||"طالب")+'</b> · '+(m.grade||"")+'<div>'+(m.text||"")+'</div></div>';
+        }).join(""):"لا أسئلة بعد";
+      }).catch(function(){ document.getElementById("qs").textContent="أضف مجموعة messages في القواعد"; });
+    }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault();
       var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:document.getElementById("live-grade").value,stream_url:yt(document.getElementById("live-embed").value),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"live",teacher:u.name||""};
@@ -98,13 +121,16 @@
     };
     document.getElementById("hw-form").onsubmit=function(e){
       e.preventDefault();
-      var g=document.getElementById("hw-grade").value;
-      var title=document.getElementById("hw-title").value.trim();
-      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:g,title:title,due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[{q:title,opts:["فهمت","أعيد"],ok:0}],points_each:10,teacher:u.name||""};
-      var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item); document.getElementById("hw-status").textContent="نُشر لطلاب "+g; draw();
+      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:document.getElementById("hw-grade").value,title:document.getElementById("hw-title").value.trim(),due_date:document.getElementById("hw-due").value,questions:[{q:document.getElementById("hw-title").value,opts:["فهمت","أعيد"],ok:0}],points_each:10,teacher:u.name||""};
+      var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item); draw();
+    };
+    document.getElementById("lesson-form").onsubmit=function(e){
+      e.preventDefault();
+      var item={id:"ls"+Date.now(),subject_id:u.subject_id||"math",title:document.getElementById("ls-title").value.trim(),note:document.getElementById("ls-note").value.trim(),teacher:u.name||""};
+      var d=db(); d.lessons.unshift(item); save(d); cloud("lessons", item); e.target.reset();
     };
     draw();
-    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(draw);
+    HassadFB.init().then(function(){ HassadFB.pull(); loadQs(); setInterval(loadQs,8000); }).then(draw);
   </script>
 </body>
 </html>

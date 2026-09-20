@@ -42,12 +42,24 @@ function asTeacher(t, uid){
   var gs=teacherGrades(t);
   return {email:t.email||"",name:t.name,role:"teacher",uid:uid||t.id,subject_id:t.subject_id,grade:gs[0]||"",grades:gs,phone:t.phone||""};
 }
+function asStudent(s){
+  return {email:s.email,name:s.name,role:"student",uid:s.id,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status||"active"};
+}
+function findInSnap(snap, raw, email){
+  var hit=null;
+  snap.forEach(function(doc){
+    var t=Object.assign({id:doc.id}, doc.data());
+    if(phoneMatch(t.phone||doc.id, raw) || (t.email&&t.email.toLowerCase()===email)) hit={rec:t,id:doc.id};
+  });
+  return hit;
+}
 Hassad.loginHandler=function(e){
   e.preventDefault();
   const raw=document.getElementById("email").value.trim();
   const email=raw.toLowerCase();
   const password=document.getElementById("password").value;
   const err=document.getElementById("login-error");
+  const wantTeacher=new URLSearchParams(location.search).get("as")==="teacher";
   function finish(user){
     if(!user){ if(err) err.textContent="الرقم أو كلمة المرور غير صحيحة."; return; }
     if(user==="badpass"){ if(err) err.textContent="كلمة المرور غير صحيحة."; return; }
@@ -57,30 +69,25 @@ Hassad.loginHandler=function(e){
   if(ADMIN_ALIASES.includes(email)&&passEq(password,ADMIN.password)){
     return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
   }
-  function afterCloudFail(){ localLogin(email,password,err,finish,raw); }
+  function afterCloudFail(){ localLogin(email,password,err,finish,raw,wantTeacher); }
   if(cloudReady()){
     if(err) err.textContent="جارٍ التحقق...";
     HassadFB.init().then(function(ok){
       if(!ok || !HassadFB.db){ afterCloudFail(); return; }
-      return HassadFB.db.collection("teachers").get().then(function(snap){
-        var hit=null;
-        snap.forEach(function(doc){
-          var t=Object.assign({id:doc.id}, doc.data());
-          if(phoneMatch(t.phone||doc.id, raw) || (t.email&&t.email.toLowerCase()===email)) hit={t:t,id:doc.id};
-        });
+      var first=wantTeacher?"teachers":"students";
+      var second=wantTeacher?"students":"teachers";
+      return HassadFB.db.collection(first).get().then(function(snap){
+        var hit=findInSnap(snap, raw, email);
         if(hit){
-          if(!passEq(hit.t.password,password)) return finish("badpass");
-          return finish(asTeacher(hit.t, hit.id));
+          if(!passEq(hit.rec.password,password)) return finish("badpass");
+          return finish(wantTeacher||hit.rec.role==="teacher" ? asTeacher(hit.rec, hit.id) : asStudent(Object.assign({id:hit.id},hit.rec)));
         }
-        return HassadFB.db.collection("students").get().then(function(ss){
-          var sh=null;
-          ss.forEach(function(doc){
-            var s=Object.assign({id:doc.id}, doc.data());
-            if(phoneMatch(s.phone||doc.id, raw) || (s.email&&s.email.toLowerCase()===email)) sh=s;
-          });
-          if(sh){
-            if(!passEq(sh.password,password)) return finish("badpass");
-            return finish({email:sh.email,name:sh.name,role:"student",uid:sh.id,grade:sh.grade,phone:sh.phone,subscription_status:sh.subscription_status});
+        return HassadFB.db.collection(second).get().then(function(ss){
+          var hit2=findInSnap(ss, raw, email);
+          if(hit2){
+            if(!passEq(hit2.rec.password,password)) return finish("badpass");
+            if(second==="teachers" || hit2.rec.role==="teacher") return finish(asTeacher(hit2.rec, hit2.id));
+            return finish(asStudent(Object.assign({id:hit2.id},hit2.rec)));
           }
           afterCloudFail();
         });
@@ -90,29 +97,30 @@ Hassad.loginHandler=function(e){
   }
   afterCloudFail();
 };
-function localLogin(email,password,err,finish,raw){
+function localLogin(email,password,err,finish,raw,wantTeacher){
   const data=ensureTeachers();
-  const tEntry=Object.entries(data.teachers||{}).find(function(pair){
-    var t=pair[1]||{};
-    if(t.email && t.email.toLowerCase()===email) return true;
-    if(phoneMatch(t.phone||pair[0], raw)) return true;
-    return false;
-  });
-  if(tEntry){
-    const [uid,t]=tEntry;
-    if(!passEq(t.password,password)) return finish("badpass");
-    return finish(asTeacher(t, uid));
+  function scan(map, asT){
+    return Object.entries(map||{}).find(function(pair){
+      var t=pair[1]||{};
+      if(t.email && t.email.toLowerCase()===email) return true;
+      if(phoneMatch(t.phone||pair[0], raw)) return true;
+      return false;
+    });
   }
-  const sEntry=Object.entries(data.students||{}).find(function(pair){
-    var s=pair[1]||{};
-    if(s.email && s.email.toLowerCase()===email) return true;
-    if(phoneMatch(s.phone||pair[0], raw)) return true;
-    return false;
-  });
+  var tEntry=scan(data.teachers);
+  var sEntry=scan(data.students);
+  if(wantTeacher && tEntry){
+    if(!passEq(tEntry[1].password,password)) return finish("badpass");
+    return finish(asTeacher(tEntry[1], tEntry[0]));
+  }
   if(sEntry){
     if(!passEq(sEntry[1].password,password)) return finish("badpass");
     const uid=sEntry[0], s=sEntry[1];
     return finish({email:s.email,name:s.name,role:"student",uid,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status});
+  }
+  if(tEntry){
+    if(!passEq(tEntry[1].password,password)) return finish("badpass");
+    return finish(asTeacher(tEntry[1], tEntry[0]));
   }
   finish(null);
 }

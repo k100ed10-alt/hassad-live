@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تجهيز حَصاد</title>
+  <style>
+    body{font-family:system-ui,Tahoma,sans-serif;background:#f4eee0;margin:0;padding:16px;color:#1a2428}
+    .card{max-width:520px;margin:0 auto;background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:18px}
+    h1{color:#0e5160;font-size:22px}
+    pre{background:#06262e;color:#ead9a0;padding:12px;border-radius:12px;white-space:pre-wrap;font-size:12px}
+    .ok{color:#157347;font-weight:800}
+    .bad{color:#b42318;font-weight:800}
+    button{width:100%;margin-top:10px;padding:12px;border:0;border-radius:12px;background:#0e5160;color:#fff;font-weight:800}
+    label,input{display:block;width:100%;box-sizing:border-box}
+    input{padding:10px;margin:6px 0 10px;border:1px solid #d9d0bc;border-radius:10px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>تفعيل المنصة</h1>
+    <p>1) افتح Firebase → Firestore → Rules وانشر هذا النص:</p>
+    <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+    <p>2) اضغط الزر لإنشاء المجموعات وحساب معلم للتجربة.</p>
+    <p id="st" class="bad">لم يُختبر بعد</p>
+    <label>اسم المعلم</label><input id="name" value="معلم التجربة">
+    <label>هاتف المعلم</label><input id="phone" value="96893238258">
+    <label>كلمة المرور</label><input id="pass" value="Hs-Fp4ShS">
+    <button type="button" onclick="go()">أنشئ المجموعات وحفظ المعلم</button>
+    <p><a href="login.html?as=teacher">دخول المعلم</a> · <a href="login.html?as=admin">دخول المدير</a></p>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/fb.js"></script>
+  <script>
+    function go(){
+      var st=document.getElementById("st");
+      st.className="bad"; st.textContent="جارٍ الكتابة...";
+      HassadFB.init().then(function(ok){
+        if(!ok){ st.textContent="فشل الاتصال بـ Firebase"; return; }
+        var phone=document.getElementById("phone").value.replace(/[^0-9]/g,"");
+        if(phone.length===8) phone="968"+phone;
+        var rec={name:document.getElementById("name").value,phone:phone,password:document.getElementById("pass").value,role:"teacher",subject_id:"math",grade:"الصف العاشر",grades:["الصف العاشر","الصف الحادي عشر"],email:"t"+phone+"@hassad.om"};
+        return Promise.all([
+          HassadFB.put("teachers","phone_"+phone,rec),
+          HassadFB.put("students","_init",{ok:true}),
+          HassadFB.put("live_sessions","_init",{ok:true}),
+          HassadFB.put("assignments","_init",{ok:true})
+        ]).then(function(){
+          var data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
+          data.teachers=data.teachers||{}; data.teachers["phone_"+phone]=rec;
+          localStorage.setItem("hassad-db",JSON.stringify(data));
+          st.className="ok";
+          st.textContent="تم. المعلم يدخل بـ "+phone+" و "+rec.password;
+        });
+      }).catch(function(e){
+        st.className="bad";
+        st.textContent="مرفوض. انشر قواعد Firestore أولاً. "+(e&&e.message||"");
+      });
+    }
+  </script>
+</body>
+</html>

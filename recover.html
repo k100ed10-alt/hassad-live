@@ -13,8 +13,9 @@
     label{display:block;font-weight:700;margin:12px 0 6px}
     input{width:100%;padding:12px;border:1px solid #d9d0bc;border-radius:12px;font:inherit}
     button{width:100%;margin-top:14px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
-    .box{margin-top:14px;background:#faf6ea;border-radius:12px;padding:12px;display:none}
-    .box b{display:block;margin:6px 0;word-break:break-all}
+    .box{margin-top:14px;background:#06262e;color:#fff;border-radius:12px;padding:14px;display:none}
+    .box b{display:block;margin:4px 0 8px;word-break:break-all;direction:ltr}
+    .copy{width:auto;margin:0 0 10px;background:#ead9a0;color:#06262e;padding:6px 10px;border-radius:8px;font-size:13px}
     a{color:#0e5160}
   </style>
 </head>
@@ -22,15 +23,18 @@
   <div class="wrap">
     <div class="card">
       <h1>نسيت كلمة المرور؟</h1>
-      <p>اكتب رقم الهاتف المسجل. سنظهر البريد ونولّد كلمة سرية جديدة. لا حساب ثاني بنفس الرقم.</p>
+      <p>اكتب رقم الهاتف. سنظهر البريد ونولّد كلمة جديدة.</p>
       <label>رقم الهاتف</label>
       <input id="phone" inputmode="tel" placeholder="9689xxxxxxx">
       <button type="button" onclick="go()">استعادة</button>
       <p id="err" style="color:#b42318"></p>
       <div class="box" id="box">
         <div>البريد</div><b id="em"></b>
+        <button class="copy" type="button" onclick="cp('em',this,'نسخ البريد')">نسخ البريد</button>
         <div>كلمة المرور الجديدة</div><b id="pw"></b>
-        <p>احفظهما ثم <a href="login.html">ادخل</a></p>
+        <button class="copy" type="button" onclick="cp('pw',this,'نسخ الكلمة')">نسخ الكلمة</button>
+        <button class="copy" type="button" onclick="both(this)">نسخ الاثنين معاً</button>
+        <p style="color:#ead9a0">احفظهما ثم <a href="login.html" style="color:#ead9a0">ادخل</a></p>
       </div>
       <p><a href="login.html">رجوع للدخول</a></p>
     </div>
@@ -45,6 +49,16 @@
       return d;
     }
     function gen(){var a="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";var s="Hs-";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+    function copyText(t){
+      if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+      var a=document.createElement("textarea"); a.value=t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove(); return Promise.resolve();
+    }
+    function cp(id,btn,label){
+      copyText(document.getElementById(id).textContent).then(function(){ btn.textContent="نُسخ"; setTimeout(function(){btn.textContent=label;},1500); });
+    }
+    function both(btn){
+      copyText("البريد: "+document.getElementById("em").textContent+"\nكلمة المرور: "+document.getElementById("pw").textContent).then(function(){ btn.textContent="نُسخا"; setTimeout(function(){btn.textContent="نسخ الاثنين معاً";},1500); });
+    }
     function go(){
       var phone=norm(document.getElementById("phone").value);
       var err=document.getElementById("err"); err.textContent="";
@@ -57,10 +71,8 @@
         var s=data.students[id]||{};
         if(s.phone===phone || id==="phone_"+phone){ found=s; uid=id; }
       });
-      if(!found){ err.textContent="لا حساب بهذا الرقم. إن كنت سجلت من جهاز آخر اطلب من المدير."; return; }
-      var next=gen();
-      found.password=next;
-      data.students[uid]=found;
+      if(!found){ err.textContent="لا حساب بهذا الرقم."; return; }
+      var next=gen(); found.password=next; data.students[uid]=found;
       localStorage.setItem("hassad-db", JSON.stringify(data));
       document.getElementById("em").textContent=found.email||("s"+phone+"@hassad.om");
       document.getElementById("pw").textContent=next;

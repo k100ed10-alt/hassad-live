@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=34" />
+  <link rel="stylesheet" href="css/style.css?v=36" />
 </head>
 <body>
   <nav class="nav">
@@ -25,16 +25,20 @@
       <p class="hint" id="hint"><a href="recover.html">نسيت كلمة المرور؟</a> · <a href="register.html">طالب جديد</a></p>
     </form>
   </div>
-  <script src="js/app.js?v=34"></script>
-  <script src="js/roles.js?v=34"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=36"></script>
+  <script src="js/fb.js?v=36"></script>
+  <script src="js/app.js?v=36"></script>
+  <script src="js/roles.js?v=36"></script>
   <script>
     var as=new URLSearchParams(location.search).get("as");
     if(as==="teacher"){
       document.getElementById("ttl").textContent="دخول المعلم";
-      document.getElementById("sub").textContent="الحساب ينشئه المدير فقط.";
+      document.getElementById("sub").textContent="الحساب ينشئه المدير. يعمل من أي هاتف.";
       document.getElementById("lab").textContent="بريد المعلم";
       var em=document.getElementById("email");
-      em.type="email"; em.inputMode="email"; em.placeholder=""; em.value="";
+      em.type="email"; em.inputMode="email"; em.placeholder="name@hassad.om"; em.value="";
       document.getElementById("hint").innerHTML="";
     }
     if(as==="admin"){

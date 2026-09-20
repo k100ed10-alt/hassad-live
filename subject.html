@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>المادة | حَصاد</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -45,7 +45,7 @@
     <div class="stage" id="stage"><div class="wait">المعلم لم يبدأ البث بعد</div></div>
     <div class="chat">
       <strong>اسأل المعلم</strong>
-      <div class="bubble">مرحباً — اكتب سؤالك</div>
+      <div id="bubbles"><div class="bubble">يصل سؤالك للمعلم</div></div>
       <div class="row">
         <input id="chat-text" placeholder="اكتب سؤالك">
         <button type="button" onclick="send()">إرسال</button>
@@ -55,19 +55,17 @@
   <section id="lessons" class="card" hidden><div id="lessons-list"></div></section>
   <section id="arch" class="card" hidden><div id="arch-list"></div></section>
   <section id="hw" class="card" hidden><div id="hw-list"></div></section>
-  <div id="quiz-box" class="card" style="display:none"></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=43"></script>
-  <script src="js/fb.js?v=43"></script>
-  <script src="js/app.js?v=43"></script>
-  <script src="js/quiz.js?v=43"></script>
+  <script src="js/firebase-config.js?v=44"></script>
+  <script src="js/fb.js?v=44"></script>
   <script>
     var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
     var id=new URLSearchParams(location.search).get("id")||"math";
     document.getElementById("title").textContent=names[id]||id;
     var n=document.getElementById("n-"+id); if(n) n.className="on";
+    var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     function ytId(src){
       var m=String(src||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
       return m?m[1]:"";
@@ -77,15 +75,20 @@
       var lives=(data.live_sessions||[]).filter(function(s){ return !s.subject_id || s.subject_id===id; });
       var live=lives.find(function(s){return s.stream_url && s.status!=="completed";}) || lives.find(function(s){return s.stream_url;});
       var stage=document.getElementById("stage");
-      if(!live){ stage.innerHTML='<div class="wait">المعلم لم يبدأ البث بعد</div>'; return; }
-      var vid=ytId(live.stream_url);
-      if(!vid){ stage.innerHTML='<div class="wait">رابط البث غير صالح</div>'; return; }
-      var src="https://www.youtube.com/embed/"+vid+"?playsinline=1&rel=0&modestbranding=1&enablejsapi=1";
-      stage.innerHTML='<div class="player"><iframe src="'+src+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
-      var hws=data.assignments||[];
-      document.getElementById("hw-list").innerHTML=hws.filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){
-        return '<div class="card"><strong>'+a.title+'</strong></div>';
-      }).join("")||"لا واجبات";
+      if(live && ytId(live.stream_url)){
+        var src="https://www.youtube.com/embed/"+ytId(live.stream_url)+"?playsinline=1&rel=0&modestbranding=1";
+        stage.innerHTML='<div class="player"><iframe src="'+src+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline></iframe></div>';
+      }
+      document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return !l.subject_id||l.subject_id===id;}).map(function(l){return "<div class='card'><strong>"+l.title+"</strong><div>"+(l.note||"")+"</div></div>";}).join(""))||"لا دروس بعد";
+      document.getElementById("hw-list").innerHTML=((data.assignments||[]).filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){return "<div class='card'><strong>"+a.title+"</strong></div>";}).join(""))||"لا واجبات";
+      document.getElementById("arch-list").textContent="لا تسجيلات بعد";
+    }
+    function send(){
+      var t=document.getElementById("chat-text"); var text=(t.value||"").trim(); if(!text) return;
+      var b=document.createElement("div"); b.className="bubble"; b.textContent=text;
+      document.getElementById("bubbles").appendChild(b); t.value="";
+      var msg={id:"m"+Date.now(),subject_id:id,grade:(u&&u.grade)||"",name:(u&&u.name)||"طالب",text:text,at:Date.now()};
+      HassadFB.put("messages", msg.id, msg).catch(function(){});
     }
     fill();
     HassadFB.init().then(function(){ return HassadFB.pull(); }).then(fill);
@@ -93,11 +96,6 @@
       ["live","lessons","arch","hw"].forEach(function(x){document.getElementById(x).hidden=x!==name;});
       document.querySelectorAll(".tabs button").forEach(function(b){b.className="";});
       btn.className="on";
-    }
-    function send(){
-      var t=document.getElementById("chat-text"); if(!t.value.trim()) return;
-      var b=document.createElement("div"); b.className="bubble"; b.textContent=t.value;
-      t.parentNode.parentNode.insertBefore(b,t.parentNode); t.value="";
     }
   </script>
 </body>

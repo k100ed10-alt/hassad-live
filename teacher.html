@@ -15,9 +15,9 @@
     label{display:block;font-weight:700;margin:10px 0 6px;font-size:14px}
     input,select,textarea{width:100%;padding:11px;border:1px solid #d9d0bc;border-radius:12px;background:#fff}
     .btn{width:100%;margin-top:12px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
+    .del{background:transparent;border:0;color:#b42318;font-weight:800;padding:4px 0}
     .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px}
     .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
-    .ok{color:#157347;font-weight:800}
     .q{background:#f7f1df;border-radius:12px;padding:10px;margin:8px 0}
   </style>
 </head>
@@ -30,14 +30,14 @@
   <p id="pub"></p>
   <div class="card">
     <h3>أسئلة الطلاب</h3>
-    <p class="muted">تظهر هنا رسائل «اسأل المعلم»</p>
+    <p class="muted">اضغط حذف لإزالة الرسالة من عند المعلم والطالب</p>
     <div id="qs">لا أسئلة بعد</div>
   </div>
   <form class="card" id="lesson-form">
     <h3>إضافة درس</h3>
     <label>عنوان الدرس</label><input id="ls-title" required>
     <label>رابط أو ملاحظة</label><input id="ls-note">
-    <button class="btn">نشر الدرس للطلاب</button>
+    <button class="btn">نشر الدرس</button>
   </form>
   <form class="card" id="live-form">
     <h3>إضافة حصة</h3>
@@ -59,8 +59,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=44"></script>
-  <script src="js/fb.js?v=44"></script>
+  <script src="js/firebase-config.js?v=45"></script>
+  <script src="js/fb.js?v=45"></script>
   <script>
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -104,15 +104,19 @@
       HassadFB.db.collection("messages").get().then(function(snap){
         var rows=[];
         snap.forEach(function(doc){
-          var m=doc.data()||{};
+          var m=Object.assign({id:doc.id}, doc.data()||{});
           if(u.subject_id && m.subject_id && m.subject_id!==u.subject_id) return;
           rows.push(m);
         });
         rows.sort(function(a,b){return (b.at||0)-(a.at||0);});
         document.getElementById("qs").innerHTML=rows.length?rows.map(function(m){
-          return '<div class="q"><b>'+(m.name||"طالب")+'</b> · '+(m.grade||"")+'<div>'+(m.text||"")+'</div></div>';
+          return '<div class="q"><b>'+(m.name||"طالب")+'</b> · '+(m.grade||"")+'<div>'+(m.text||"")+'</div><button class="del" type="button" onclick="delMsg(\''+m.id+'\')">حذف</button></div>';
         }).join(""):"لا أسئلة بعد";
       }).catch(function(){ document.getElementById("qs").textContent="أضف مجموعة messages في القواعد"; });
+    }
+    function delMsg(id){
+      if(!id) return;
+      HassadFB.del("messages", id).then(loadQs);
     }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault();

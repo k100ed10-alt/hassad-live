@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=38" />
+  <link rel="stylesheet" href="css/style.css?v=40" />
   <script>
     try{
       var _u=JSON.parse(localStorage.getItem("hassad-user")||"null");
@@ -30,17 +30,17 @@
         <button class="btn">حفظ المفتاح</button>
       </form>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
-        <h3>إنشاء معلم</h3>
-        <p class="hint">يمكن تحديد أكثر من صف. الدخول برقم الهاتف.</p>
+        <h3>إنشاء / تعديل معلم</h3>
+        <p class="hint">للتعديل: اضغط تعديل بجانب المعلم ثم غيّر الصفوف واحفظ.</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
           <div class="field"><label>رقم الهاتف</label><input id="tc-phone" required inputmode="tel" placeholder="9689xxxxxxx"></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
-          <div class="field"><label>كلمة المرور المولَّدة</label><input id="tc-pass" readonly dir="ltr"></div>
+          <div class="field"><label>كلمة المرور</label><input id="tc-pass" readonly dir="ltr"></div>
         </div>
-        <label style="display:block;font-weight:700;margin:12px 0 8px">الصفوف (يمكن اختيار أكثر من صف)</label>
+        <label style="display:block;font-weight:700;margin:12px 0 8px">الصفوف</label>
         <div id="tc-grades" class="grid-2"></div>
-        <button class="btn">حفظ وولّد كلمة المرور</button>
+        <button class="btn">حفظ صفوف المعلم</button>
         <p class="hint" id="tc-msg"></p>
       </form>
       <section class="card" style="margin-bottom:16px">
@@ -58,12 +58,13 @@
     </main>
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=38"></script>
-  <script src="js/fb.js?v=38"></script>
-  <script src="js/app.js?v=38"></script>
-  <script src="js/roles.js?v=38"></script>
-  <script src="js/grade-filter.js?v=38"></script>
+  <script src="js/firebase-config.js?v=40"></script>
+  <script src="js/fb.js?v=40"></script>
+  <script src="js/app.js?v=40"></script>
+  <script src="js/roles.js?v=40"></script>
+  <script src="js/grade-filter.js?v=40"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     var box=document.getElementById("tc-grades");
@@ -82,7 +83,6 @@
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
     var xk=document.getElementById("xai-key"); if(xk) xk.value=localStorage.getItem("hassad-xai-key")||"";
-    if(typeof fillGradeSelects==="function") fillGradeSelects();
     if(Hassad.renderAdmin) Hassad.renderAdmin();
     if(Hassad.renderTeachers) Hassad.renderTeachers();
     if(window.HassadFB){
@@ -90,9 +90,6 @@
         var st=document.getElementById("fb-status");
         if(st) st.textContent=ok?"متصل بالسحابة":"لم يتم الاتصال بالسحابة";
         if(!ok) return;
-        var data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
-        Object.keys(data.teachers||{}).forEach(function(id){ HassadFB.put("teachers", id, data.teachers[id]); });
-        Object.keys(data.students||{}).forEach(function(id){ HassadFB.put("students", id, data.students[id]); });
         return HassadFB.pull();
       }).then(function(){
         if(Hassad.renderTeachers) Hassad.renderTeachers();

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=37" />
+  <link rel="stylesheet" href="css/style.css?v=38" />
   <script>
     try{
       var _u=JSON.parse(localStorage.getItem("hassad-user")||"null");
@@ -31,20 +31,21 @@
       </form>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3>إنشاء معلم</h3>
-        <p class="hint">المعلم يدخل برقم هاتفه — بلا بريد.</p>
+        <p class="hint">يمكن تحديد أكثر من صف. الدخول برقم الهاتف.</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
           <div class="field"><label>رقم الهاتف</label><input id="tc-phone" required inputmode="tel" placeholder="9689xxxxxxx"></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
-          <div class="field"><label>الصف</label><select id="tc-grade"></select></div>
           <div class="field"><label>كلمة المرور المولَّدة</label><input id="tc-pass" readonly dir="ltr"></div>
         </div>
+        <label style="display:block;font-weight:700;margin:12px 0 8px">الصفوف (يمكن اختيار أكثر من صف)</label>
+        <div id="tc-grades" class="grid-2"></div>
         <button class="btn">حفظ وولّد كلمة المرور</button>
         <p class="hint" id="tc-msg"></p>
       </form>
       <section class="card" style="margin-bottom:16px">
         <h3>المعلمون</h3>
-        <table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>كلمة المرور</th><th>الصف</th></tr></thead><tbody id="teachers"></tbody></table>
+        <table class="table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>كلمة المرور</th><th>الصفوف</th></tr></thead><tbody id="teachers"></tbody></table>
       </section>
       <section class="card">
         <h3>الطلاب حسب الصف</h3>
@@ -58,17 +59,24 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=37"></script>
-  <script src="js/fb.js?v=37"></script>
-  <script src="js/app.js?v=37"></script>
-  <script src="js/roles.js?v=37"></script>
-  <script src="js/grade-filter.js?v=37"></script>
+  <script src="js/firebase-config.js?v=38"></script>
+  <script src="js/fb.js?v=38"></script>
+  <script src="js/app.js?v=38"></script>
+  <script src="js/roles.js?v=38"></script>
+  <script src="js/grade-filter.js?v=38"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
-    ["tc-grade","view-grade"].forEach(function(id){
-      var el=document.getElementById(id); if(!el||el.options.length) return;
-      grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;el.appendChild(o)});
-    });
+    var box=document.getElementById("tc-grades");
+    if(box && !box.children.length){
+      grades.forEach(function(g){
+        var lab=document.createElement("label");
+        lab.style.cssText="display:flex;gap:8px;align-items:center;font-weight:600;margin:6px 0";
+        lab.innerHTML='<input type="checkbox" name="tc-grade" value="'+g+'"> '+g;
+        box.appendChild(lab);
+      });
+    }
+    var vg=document.getElementById("view-grade");
+    if(vg && !vg.options.length) grades.forEach(function(g){var o=document.createElement("option");o.textContent=g;vg.appendChild(o)});
     var ts=document.getElementById("tc-subject");
     if(ts && !ts.options.length){
       [["math","الرياضيات"],["islamic","الإسلامية"],["arabic","العربية"],["science","العلوم"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});

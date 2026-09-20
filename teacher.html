@@ -17,7 +17,7 @@
     .btn{width:100%;margin-top:12px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
     .sbtn{background:#0e5160;color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800;margin-top:6px}
     .del{background:transparent;border:0;color:#b42318;font-weight:800;padding:4px 0}
-    .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px}
+    .slot{padding:10px 0;border-top:1px solid #eee3cc;font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
     .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
     .q{background:#f7f1df;border-radius:12px;padding:10px;margin:8px 0}
     .ans{background:#e8f3f1;border-radius:10px;padding:8px;margin-top:6px}
@@ -32,7 +32,6 @@
   <p id="pub"></p>
   <div class="card">
     <h3>أسئلة الطلاب</h3>
-    <p class="muted">اكتب الرد ثم أرسل. يظهر للطالب في الدردشة.</p>
     <div id="qs">لا أسئلة بعد</div>
   </div>
   <form class="card" id="lesson-form">
@@ -42,7 +41,7 @@
     <button class="btn">نشر الدرس</button>
   </form>
   <form class="card" id="live-form">
-    <h3>إضافة حصة</h3>
+    <h3>إضافة حصة / بث</h3>
     <label>لأي صف؟</label><select id="live-grade"></select>
     <label>العنوان</label><input id="live-title" required>
     <label>التاريخ</label><input id="live-date" type="date" required>
@@ -57,14 +56,15 @@
     <label>آخر موعد</label><input id="hw-due" type="date" required>
     <button class="btn">نشر الواجب</button>
   </form>
-  <div class="card"><h3>جدولي</h3><div id="sched"></div></div>
+  <div class="card"><h3>الحصص والبث</h3><div id="sched"></div></div>
+  <div class="card"><h3>الواجبات</h3><div id="hwlist"></div></div>
+  <div class="card"><h3>الدروس</h3><div id="lslst"></div></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=48"></script>
-  <script src="js/fb.js?v=48"></script>
+  <script src="js/firebase-config.js?v=49"></script>
+  <script src="js/fb.js?v=49"></script>
   <script>
-    var NAMES={math:"الرياضيات"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     if(!u) location.href="login.html?as=teacher";
@@ -96,10 +96,27 @@
         return true;
       });
     }
+    function drop(col,id){
+      var d=db();
+      if(col==="live_sessions") d.live_sessions=(d.live_sessions||[]).filter(function(x){return x.id!==id;});
+      if(col==="assignments") d.assignments=(d.assignments||[]).filter(function(x){return x.id!==id;});
+      if(col==="lessons") d.lessons=(d.lessons||[]).filter(function(x){return x.id!==id;});
+      save(d);
+      HassadFB.del(col,id).then(function(){ say(true,"حُذف واختفى عن الطلاب"); draw(); });
+    }
     function draw(){
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
       document.getElementById("meta").textContent="الرياضيات · "+myGrades.join(" · ");
-      document.getElementById("sched").innerHTML=mine(db().live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
+      var d=db();
+      document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){
+        return '<div class="slot"><span>'+s.title+' — '+(s.grade||"")+' — '+(s.scheduled_time||"")+'</span><button class="del" type="button" onclick="drop(\'live_sessions\',\''+s.id+'\')">حذف البث</button></div>';
+      }).join("")||'<div class="slot">لا حصص</div>';
+      document.getElementById("hwlist").innerHTML=mine(d.assignments).map(function(s){
+        return '<div class="slot"><span>'+s.title+' — '+(s.grade||"")+(s.due_date?" — "+s.due_date:"")+'</span><button class="del" type="button" onclick="drop(\'assignments\',\''+s.id+'\')">حذف الواجب</button></div>';
+      }).join("")||'<div class="slot">لا واجبات</div>';
+      document.getElementById("lslst").innerHTML=mine(d.lessons).map(function(s){
+        return '<div class="slot"><span>'+s.title+'</span><button class="del" type="button" onclick="drop(\'lessons\',\''+s.id+'\')">حذف الدرس</button></div>';
+      }).join("")||'<div class="slot">لا دروس</div>';
     }
     function loadQs(){
       if(!HassadFB.db) return;
@@ -138,10 +155,10 @@
     document.getElementById("lesson-form").onsubmit=function(e){
       e.preventDefault();
       var item={id:"ls"+Date.now(),subject_id:"math",title:document.getElementById("ls-title").value.trim(),note:document.getElementById("ls-note").value.trim(),teacher:u.name||""};
-      var d=db(); d.lessons.unshift(item); save(d); cloud("lessons", item); e.target.reset();
+      var d=db(); d.lessons.unshift(item); save(d); cloud("lessons", item); e.target.reset(); draw();
     };
     draw();
-    HassadFB.init().then(function(){ HassadFB.pull(); loadQs(); setInterval(loadQs,10000); }).then(draw);
+    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ draw(); loadQs(); setInterval(loadQs,10000); });
   </script>
 </body>
 </html>

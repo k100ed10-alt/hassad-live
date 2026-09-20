@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>المادة | حَصاد</title>
+  <title>الرياضيات | حَصاد</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;padding:12px 12px 24px}
-    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px;overflow-x:auto;white-space:nowrap}
+    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px}
     header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
     header a.on{background:#0e5160;color:#fff}
     h1{font-size:24px;color:#0e5160;margin:4px 0 10px}
@@ -29,12 +29,9 @@
 <body>
   <header>
     <a href="home.html">الرئيسية</a>
-    <a id="n-math" href="subject.html?id=math">رياضيات</a>
-    <a id="n-islamic" href="subject.html?id=islamic">إسلامية</a>
-    <a id="n-arabic" href="subject.html?id=arabic">عربية</a>
-    <a id="n-science" href="subject.html?id=science">علوم</a>
+    <a class="on" href="subject.html?id=math">رياضيات</a>
   </header>
-  <h1 id="title">المادة</h1>
+  <h1>الرياضيات</h1>
   <div class="tabs">
     <button class="on" type="button" onclick="show('live',this)">البث</button>
     <button type="button" onclick="show('lessons',this)">الدروس</button>
@@ -61,16 +58,13 @@
   <script src="js/firebase-config.js?v=46"></script>
   <script src="js/fb.js?v=46"></script>
   <script>
-    var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
-    var id=new URLSearchParams(location.search).get("id")||"math";
-    document.getElementById("title").textContent=names[id]||id;
-    var n=document.getElementById("n-"+id); if(n) n.className="on";
+    var id="math";
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var myGrade=(u&&u.grade)||"";
     var playerSet=false;
     function sameGrade(item){
       if(!item) return false;
-      if(item.subject_id && item.subject_id!==id) return false;
+      if(item.subject_id && item.subject_id!=="math") return false;
       if(!myGrade || !item.grade) return !item.grade || item.grade===myGrade;
       return item.grade===myGrade;
     }
@@ -79,8 +73,7 @@
       return m?m[1]:"";
     }
     function drawChat(rows){
-      var box=document.getElementById("bubbles");
-      box.innerHTML=rows.map(function(m){return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>';}).join("")||'<div class="bubble">اكتب سؤالك للمعلم</div>';
+      document.getElementById("bubbles").innerHTML=rows.map(function(m){return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>';}).join("")||'<div class="bubble">اكتب سؤالك للمعلم</div>';
     }
     function loadChat(){
       if(!HassadFB.db) return;
@@ -88,7 +81,7 @@
         var rows=[];
         snap.forEach(function(doc){
           var m=doc.data()||{};
-          if(m.subject_id && m.subject_id!==id) return;
+          if(m.subject_id && m.subject_id!=="math") return;
           if(myGrade && m.grade && m.grade!==myGrade) return;
           rows.push(m);
         });
@@ -104,8 +97,7 @@
       if(live && ytId(live.stream_url)){
         if(!playerSet){
           playerSet=true;
-          var src="https://www.youtube.com/embed/"+ytId(live.stream_url)+"?playsinline=1&rel=0&modestbranding=1";
-          stage.innerHTML='<div class="player"><iframe src="'+src+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline></iframe></div>';
+          stage.innerHTML='<div class="player"><iframe src="https://www.youtube.com/embed/'+ytId(live.stream_url)+'?playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline></iframe></div>';
         }
       } else {
         playerSet=false;
@@ -117,9 +109,8 @@
     }
     function send(){
       var t=document.getElementById("chat-text"); var text=(t.value||"").trim(); if(!text) return;
-      var msg={id:"m"+Date.now(),subject_id:id,grade:myGrade,name:(u&&u.name)||"طالب",text:text,at:Date.now()};
-      t.value="";
-      HassadFB.put("messages", msg.id, msg).then(loadChat);
+      var msg={id:"m"+Date.now(),subject_id:"math",grade:myGrade,name:(u&&u.name)||"طالب",text:text,at:Date.now()};
+      t.value=""; HassadFB.put("messages", msg.id, msg).then(loadChat);
     }
     fill();
     HassadFB.init().then(function(){ HassadFB.pull().then(fill); loadChat(); });

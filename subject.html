@@ -13,7 +13,7 @@
     h1{font-size:24px;color:#0e5160;margin:4px 0 4px}
     .teacher{color:#5c6b70;margin-bottom:12px}
     .tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
-    .tabs a,.tabs button{flex:0 0 auto;border:0;background:#fff;color:#0e5160;padding:10px 14px;border-radius:999px;font-weight:800;text-decoration:none}
+    .tabs button{flex:0 0 auto;border:0;background:#fff;color:#0e5160;padding:10px 14px;border-radius:999px;font-weight:800}
     .tabs .on{background:#0e5160;color:#fff}
     .stage{background:linear-gradient(180deg,#0b3d4a,#06262e);border-radius:22px;min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:#ead9a0;padding:24px;margin-bottom:12px}
     .stage iframe{width:100%;min-height:220px;border:0;border-radius:18px}
@@ -52,36 +52,51 @@
     </div>
     <div class="chat">
       <strong>اسأل المعلم</strong>
-      <div class="bubble">مرحباً — اكتب سؤالك قبل الحصة أو خلالها</div>
+      <div class="bubble">مرحباً — اكتب سؤالك</div>
       <div class="row">
         <input id="chat-text" placeholder="مثال: لم أفهم هذه الفكرة...">
         <button type="button" onclick="send()">إرسال</button>
       </div>
     </div>
   </section>
-  <section id="lessons" class="card" hidden><div id="lessons-list">جارٍ التحميل</div></section>
-  <section id="arch" class="card" hidden><div id="arch-list">لا تسجيلات بعد</div></section>
-  <section id="hw" class="card" hidden><div id="hw-list">لا واجبات</div></section>
+  <section id="lessons" class="card" hidden><div id="lessons-list"></div></section>
+  <section id="arch" class="card" hidden><div id="arch-list"></div></section>
+  <section id="hw" class="card" hidden><div id="hw-list"></div></section>
+  <div id="quiz-box" class="card" style="display:none"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=36"></script>
+  <script src="js/fb.js?v=36"></script>
+  <script src="js/app.js?v=36"></script>
+  <script src="js/quiz.js?v=36"></script>
   <script>
     var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
-    var teachers={math:"أ. خالد",islamic:"أ. فاطمة",arabic:"أ. سعيد",science:"أ. مريم"};
     var id=new URLSearchParams(location.search).get("id")||"math";
     document.getElementById("title").textContent=names[id]||id;
-    document.getElementById("teacher").textContent=teachers[id]||"";
     var n=document.getElementById("n-"+id); if(n) n.className="on";
-    var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-    var live=(data.live_sessions||[]).find(function(s){return s.subject_id===id && s.stream_url && s.status!=="completed";});
-    var next=(data.live_sessions||[]).find(function(s){return s.subject_id===id && s.status!=="completed";});
-    if(next) document.getElementById("next").textContent="الحصة القادمة: "+next.title+" — "+(next.scheduled_time||"");
-    if(live&&live.stream_url){
-      var src=live.stream_url;
-      var m=src.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
-      if(m) src="https://www.youtube.com/embed/"+m[1];
-      document.getElementById("stage").innerHTML='<iframe src="'+src+'" allowfullscreen></iframe>';
+    var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+    function fill(){
+      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+      var grade=u&&u.grade;
+      var lives=(data.live_sessions||[]).filter(function(s){return s.subject_id===id && (!grade||!s.grade||s.grade===grade);});
+      var live=lives.find(function(s){return s.stream_url && s.status!=="completed";});
+      var next=lives.find(function(s){return s.status!=="completed";});
+      if(next) document.getElementById("next").textContent="الحصة القادمة: "+next.title+" — "+(next.scheduled_time||"");
+      if(live&&live.stream_url){
+        var src=live.stream_url;
+        var m=src.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
+        if(m) src="https://www.youtube.com/embed/"+m[1];
+        document.getElementById("stage").innerHTML='<iframe src="'+src+'" allowfullscreen></iframe>';
+      }
+      document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return l.subject_id===id;}).map(function(l){return "• "+l.title}).join("<br>"))||"لا دروس بعد";
+      var hws=(data.assignments||[]).filter(function(a){return a.subject_id===id && (!grade||!a.grade||a.grade===grade);});
+      document.getElementById("hw-list").innerHTML=hws.length?hws.map(function(a){
+        return '<div class="card"><strong>'+a.title+'</strong><br><button class="tabs on" style="margin-top:8px" onclick="Hassad.startQuiz && Hassad.startQuiz(\''+a.id+'\')">افتح النشاط</button></div>';
+      }).join(""):"لا واجبات";
+      document.getElementById("arch-list").innerHTML=(lives.filter(function(s){return s.recording_url;}).map(function(s){return "• "+s.title}).join("<br>"))||"لا تسجيلات بعد";
     }
-    document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return l.subject_id===id;}).map(function(l){return "• "+l.title}).join("<br>"))||"لا دروس بعد";
-    document.getElementById("hw-list").innerHTML=((data.assignments||[]).filter(function(a){return a.subject_id===id;}).map(function(a){return "• "+a.title}).join("<br>"))||"لا واجبات";
-    document.getElementById("arch-list").innerHTML=((data.live_sessions||[]).filter(function(s){return s.subject_id===id&&s.recording_url;}).map(function(s){return "• "+s.title}).join("<br>"))||"لا تسجيلات بعد";
+    fill();
+    if(window.HassadFB){ HassadFB.init().then(function(ok){ if(!ok) return; return HassadFB.pull(); }).then(function(){ fill(); }); }
     function show(name,btn){
       ["live","lessons","arch","hw"].forEach(function(x){document.getElementById(x).hidden=x!==name;});
       document.querySelectorAll(".tabs button").forEach(function(b){b.className="";});
@@ -89,8 +104,8 @@
     }
     function send(){
       var t=document.getElementById("chat-text"); if(!t.value.trim()) return;
-      var b=document.createElement("div"); b.className="bubble"; b.textContent=t.value; t.parentNode.previousSibling.after?t.parentNode.parentNode.insertBefore(b,t.parentNode):t.parentNode.parentNode.appendChild(b);
-      t.value="";
+      var b=document.createElement("div"); b.className="bubble"; b.textContent=t.value;
+      t.parentNode.parentNode.insertBefore(b,t.parentNode); t.value="";
     }
   </script>
 </body>

@@ -11,9 +11,10 @@
     .gate a,.gate button{display:block;margin:10px 0;padding:12px;border-radius:12px;text-decoration:none;font-weight:800;border:0;width:100%}
     .go{background:#ead9a0;color:#06262e}
     .out{background:transparent;color:#ead9a0}
-    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px}
-    header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
+    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px;display:flex;align-items:center;gap:4px}
+    header a,header button{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px;border:0;background:transparent;font:inherit}
     header a.on{background:#0e5160;color:#fff}
+    header .leave{margin-right:auto;color:#ffd6db}
     h1{font-size:22px;color:#0e5160;margin:4px 0 10px}
     .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
     .pills span{padding:7px 12px;border-radius:999px;font-weight:800;font-size:14px}
@@ -22,7 +23,6 @@
     .slot{padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
     .subs{margin-bottom:12px}
     .sub{display:block;border-radius:18px;padding:18px;min-height:88px;text-decoration:none;color:#123;background:#dbeafe}
-    .soon{opacity:.45;pointer-events:none}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
     .rank{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #eee3cc}
     .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
@@ -35,13 +35,14 @@
     <div class="gate">
       <h2>حساب الإدارة</h2>
       <a class="go" href="admin.html">ادخل لوحة التحكم</a>
-      <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='login.html'">خروج</button>
+      <button class="out" type="button" onclick="out()">خروج</button>
     </div>
   </div>
   <div id="student">
     <header>
       <a class="on" href="home.html">الرئيسية</a>
       <a href="subject.html?id=math">رياضيات</a>
+      <button class="leave" type="button" onclick="out()">خروج</button>
     </header>
     <h1 id="hi">مرحباً</h1>
     <div class="pills">
@@ -58,9 +59,10 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=46"></script>
-  <script src="js/fb.js?v=46"></script>
+  <script src="js/firebase-config.js?v=53"></script>
+  <script src="js/fb.js?v=53"></script>
   <script>
+    function out(){ localStorage.removeItem("hassad-user"); location.href="login.html"; }
     function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
     function paint(){
       var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}

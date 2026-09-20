@@ -11,7 +11,7 @@
     .gate a,.gate button{display:block;margin:10px 0;padding:12px;border-radius:12px;text-decoration:none;font-weight:800;border:0;width:100%}
     .go{background:#ead9a0;color:#06262e}
     .out{background:transparent;color:#ead9a0}
-    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px;overflow-x:auto;white-space:nowrap}
+    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px}
     header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
     header a.on{background:#0e5160;color:#fff}
     h1{font-size:22px;color:#0e5160;margin:4px 0 10px}
@@ -20,9 +20,9 @@
     .p1{background:#fff3c4}.p2{background:#ffd6db}.p3{background:#d7eefe}
     .week{background:#0e5160;color:#fff;border-radius:18px;padding:14px;margin-bottom:12px}
     .slot{padding:10px 0;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
-    .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-    .sub{border-radius:18px;padding:16px;min-height:96px;text-decoration:none;color:#123}
-    .m{background:#dbeafe}.i{background:#fef3c7}.a{background:#fce7f3}.s{background:#dcfce7}
+    .subs{margin-bottom:12px}
+    .sub{display:block;border-radius:18px;padding:18px;min-height:88px;text-decoration:none;color:#123;background:#dbeafe}
+    .soon{opacity:.45;pointer-events:none}
     .box{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:14px;margin-bottom:12px}
     .rank{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #eee3cc}
     .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
@@ -42,9 +42,6 @@
     <header>
       <a class="on" href="home.html">الرئيسية</a>
       <a href="subject.html?id=math">رياضيات</a>
-      <a href="subject.html?id=islamic">إسلامية</a>
-      <a href="subject.html?id=arabic">عربية</a>
-      <a href="subject.html?id=science">علوم</a>
     </header>
     <h1 id="hi">مرحباً</h1>
     <div class="pills">
@@ -54,18 +51,15 @@
     </div>
     <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
     <div class="subs">
-      <a class="sub m" href="subject.html?id=math"><strong>الرياضيات</strong></a>
-      <a class="sub i" href="subject.html?id=islamic"><strong>الإسلامية</strong></a>
-      <a class="sub a" href="subject.html?id=arabic"><strong>العربية</strong></a>
-      <a class="sub s" href="subject.html?id=science"><strong>العلوم</strong></a>
+      <a class="sub" href="subject.html?id=math"><strong>الرياضيات</strong><div>مفتوحة الآن</div></a>
     </div>
     <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
     <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=36"></script>
-  <script src="js/fb.js?v=36"></script>
+  <script src="js/firebase-config.js?v=46"></script>
+  <script src="js/fb.js?v=46"></script>
   <script>
     function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
     function paint(){
@@ -98,10 +92,10 @@
       document.getElementById("board").innerHTML=board.slice(0,8).map(function(r,i){
         return '<div class="rank '+(i===0?"gold":"")+(r.me?" me":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+ar(i+1)+'</b> '+r.name+(r.me?" (أنت)":"")+'</span><span>★ '+ar(r.pts)+'</span></div>';
       }).join("") || '<div class="slot">لا نقاط بعد</div>';
-      var sessions=(data.live_sessions||[]).filter(function(s){return !grade||!s.grade||s.grade===grade;});
+      var sessions=(data.live_sessions||[]).filter(function(s){return (!s.subject_id||s.subject_id==="math") && (!grade||!s.grade||s.grade===grade);});
       document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+(s.scheduled_time?" — "+s.scheduled_time:"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
-      var hws=(data.assignments||[]).filter(function(a){return !grade||!a.grade||a.grade===grade;});
-      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id='+(a.subject_id||"math")+'">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+      var hws=(data.assignments||[]).filter(function(a){return (!a.subject_id||a.subject_id==="math") && (!grade||!a.grade||a.grade===grade);});
+      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id=math">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
     }
     paint();
     if(window.HassadFB){ HassadFB.init().then(function(ok){ if(!ok) return; return HassadFB.pull(); }).then(function(){ paint(); }); }

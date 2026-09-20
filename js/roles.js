@@ -21,6 +21,9 @@ function dest(user){
   return "home.html";
 }
 function cloudReady(){ return window.HassadFB && typeof firebase!=="undefined"; }
+function asTeacher(t, uid){
+  return {email:t.email||"",name:t.name,role:"teacher",uid:uid||t.id,subject_id:t.subject_id,grade:t.grade,phone:t.phone||""};
+}
 Hassad.loginHandler=function(e){
   e.preventDefault();
   const raw=document.getElementById("email").value.trim();
@@ -37,31 +40,34 @@ Hassad.loginHandler=function(e){
     return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
   }
   if(cloudReady()){
-    if(err) err.textContent="جارٍ التحقق من السحابة...";
+    if(err) err.textContent="جارٍ التحقق...";
     HassadFB.init().then(function(ok){
       if(!ok || !HassadFB.db){ localLogin(email,password,err,finish,raw); return; }
       var phone=normPhone(raw);
-      HassadFB.db.collection("teachers").where("email","==",email).limit(1).get().then(function(snap){
-        if(!snap.empty){
-          var t=Object.assign({id:snap.docs[0].id}, snap.docs[0].data());
+      var tDoc=phone ? HassadFB.db.collection("teachers").doc("phone_"+phone).get() : Promise.resolve({exists:false});
+      tDoc.then(function(doc){
+        if(doc && doc.exists){
+          var t=Object.assign({id:doc.id}, doc.data());
           if(t.password!==password) return finish("badpass");
-          return finish({email:t.email,name:t.name,role:"teacher",uid:t.id,subject_id:t.subject_id,grade:t.grade});
+          return finish(asTeacher(t, doc.id));
         }
-        var q=phone? HassadFB.db.collection("students").doc("phone_"+phone).get() : Promise.resolve({exists:false});
-        return q.then(function(doc){
-          if(doc && doc.exists){
-            var s=Object.assign({id:doc.id}, doc.data());
-            if(s.password!==password) return finish("badpass");
-            return finish({email:s.email,name:s.name,role:"student",uid:s.id,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status});
+        return HassadFB.db.collection("teachers").where("email","==",email).limit(1).get().then(function(snap){
+          if(!snap.empty){
+            var t=Object.assign({id:snap.docs[0].id}, snap.docs[0].data());
+            if(t.password!==password) return finish("badpass");
+            return finish(asTeacher(t, snap.docs[0].id));
           }
-          return HassadFB.db.collection("students").where("email","==",email).limit(1).get().then(function(ss){
-            if(!ss.empty){
-              var s2=Object.assign({id:ss.docs[0].id}, ss.docs[0].data());
-              if(s2.password!==password) return finish("badpass");
-              return finish({email:s2.email,name:s2.name,role:"student",uid:s2.id,grade:s2.grade,phone:s2.phone,subscription_status:s2.subscription_status});
-            }
-            localLogin(email,password,err,finish,raw);
-          });
+          if(phone){
+            return HassadFB.db.collection("teachers").where("phone","==",phone).limit(1).get().then(function(ts){
+              if(!ts.empty){
+                var t2=Object.assign({id:ts.docs[0].id}, ts.docs[0].data());
+                if(t2.password!==password) return finish("badpass");
+                return finish(asTeacher(t2, ts.docs[0].id));
+              }
+              return studentCloud(phone,email,password,finish,err,raw);
+            });
+          }
+          return studentCloud(phone,email,password,finish,err,raw);
         });
       }).catch(function(){ localLogin(email,password,err,finish,raw); });
     });
@@ -69,15 +75,39 @@ Hassad.loginHandler=function(e){
   }
   localLogin(email,password,err,finish,raw);
 };
+function studentCloud(phone,email,password,finish,err,raw){
+  var q=phone? HassadFB.db.collection("students").doc("phone_"+phone).get() : Promise.resolve({exists:false});
+  q.then(function(doc){
+    if(doc && doc.exists){
+      var s=Object.assign({id:doc.id}, doc.data());
+      if(s.password!==password) return finish("badpass");
+      return finish({email:s.email,name:s.name,role:"student",uid:s.id,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status});
+    }
+    return HassadFB.db.collection("students").where("email","==",email).limit(1).get().then(function(ss){
+      if(!ss.empty){
+        var s2=Object.assign({id:ss.docs[0].id}, ss.docs[0].data());
+        if(s2.password!==password) return finish("badpass");
+        return finish({email:s2.email,name:s2.name,role:"student",uid:s2.id,grade:s2.grade,phone:s2.phone,subscription_status:s2.subscription_status});
+      }
+      localLogin(email,password,err,finish,raw);
+    });
+  });
+}
 function localLogin(email,password,err,finish,raw){
   const data=ensureTeachers();
-  const tEntry=Object.entries(data.teachers||{}).find(([,t])=>t.email && t.email.toLowerCase()===email);
+  const phone=normPhone(raw||email);
+  const tEntry=Object.entries(data.teachers||{}).find(function(pair){
+    var t=pair[1]||{};
+    if(t.email && t.email.toLowerCase()===email) return true;
+    if(phone && t.phone===phone) return true;
+    if(phone && pair[0]==="phone_"+phone) return true;
+    return false;
+  });
   if(tEntry){
     const [uid,t]=tEntry;
     if(t.password!==password) return finish("badpass");
-    return finish({email:t.email,name:t.name,role:"teacher",uid,subject_id:t.subject_id,grade:t.grade});
+    return finish(asTeacher(t, uid));
   }
-  const phone=normPhone(raw||email);
   const students=data.students||{};
   const sEntry=Object.entries(students).find(function(pair){
     var s=pair[1]||{};
@@ -96,24 +126,24 @@ function localLogin(email,password,err,finish,raw){
 Hassad.createTeacher=function(e){
   e.preventDefault();
   const data=ensureTeachers();
-  const email=document.getElementById("tc-email").value.trim().toLowerCase();
-  if(Object.values(data.teachers).some(function(t){return t.email===email;})){
-    document.getElementById("tc-msg").textContent="هذا البريد مسجل مسبقاً";
+  const name=document.getElementById("tc-name").value.trim();
+  const phone=normPhone(document.getElementById("tc-phone")?document.getElementById("tc-phone").value:(document.getElementById("tc-email")||{}).value);
+  if(!phone){ document.getElementById("tc-msg").textContent="اكتب رقم هاتف المعلم"; return; }
+  if(Object.values(data.teachers).some(function(t){return t.phone===phone;})){
+    document.getElementById("tc-msg").textContent="هذا الرقم مسجل مسبقاً";
     return;
   }
-  const uid="tch_"+Date.now();
+  const uid="phone_"+phone;
   const password=(Hassad.genPassword&&Hassad.genPassword())||("Hs-"+Math.random().toString(36).slice(2,8));
-  const rec={name:document.getElementById("tc-name").value.trim(),email,password,subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
+  const rec={name:name,phone:phone,email:"t"+phone+"@hassad.om",password,subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
   var box=document.getElementById("tc-pass");
   if(box) box.value=password;
-  document.getElementById("tc-msg").textContent="كلمة المرور: "+password+" — أرسل: "+email+" / "+password;
+  document.getElementById("tc-msg").textContent="يدخل برقم الهاتف "+phone+" والكلمة "+password;
   Hassad.renderTeachers();
   if(cloudReady()){
-    HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); }).then(function(){
-      document.getElementById("tc-msg").textContent="كلمة المرور: "+password+" — حُفظ في السحابة. يدخل من أي هاتف.";
-    }).catch(function(){});
+    HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); });
   }
 };
 Hassad.renderTeachers=function(){
@@ -121,7 +151,7 @@ Hassad.renderTeachers=function(){
   if(!tb) return;
   var data=ensureTeachers();
   tb.innerHTML=Object.values(data.teachers||{}).map(function(t){
-    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.email||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+(t.grade||"")+"</td></tr>";
+    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.phone||t.email||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+(t.grade||"")+"</td></tr>";
   }).join("") || "<tr><td colspan='4'>لا معلمين بعد</td></tr>";
 };
 Hassad.requireAuth=function(){return Hassad.currentUser&&Hassad.currentUser();};

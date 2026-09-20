@@ -19,7 +19,6 @@
     .muted{color:#5c6b70;font-size:13px;margin-bottom:10px}
     .ok{color:#157347;font-weight:800}
     .bad{color:#b42318;font-weight:800}
-    #hw-preview{display:none;width:100%;border-radius:12px;margin-top:8px;max-height:220px;object-fit:contain;background:#faf6ea}
   </style>
 </head>
 <body>
@@ -28,34 +27,30 @@
     <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='index.html'">خروج</button>
   </header>
   <p class="muted" id="meta"></p>
-  <p class="muted" id="pub"></p>
+  <p id="pub"></p>
   <form class="card" id="live-form">
     <h3>إضافة حصة</h3>
     <label>لأي صف؟</label><select id="live-grade"></select>
     <label>العنوان</label><input id="live-title" required>
     <label>التاريخ</label><input id="live-date" type="date" required>
     <label>الوقت</label><input id="live-hour" type="time" required>
-    <label>رابط البث</label><input id="live-embed" dir="ltr" placeholder="https://youtube.com/...">
+    <label>رابط البث</label><input id="live-embed" dir="ltr" value="https://www.youtube.com/watch?v=nCgI8rjOWUw">
     <button class="btn">نشر الحصة للطلاب</button>
   </form>
   <form class="card" id="hw-form">
     <h3>إضافة واجب</h3>
     <label>لأي صف؟</label><select id="hw-grade"></select>
     <label>العنوان</label><input id="hw-title" required>
-    <label>صورة الواجب</label><input id="hw-file" type="file" accept="image/*">
-    <img id="hw-preview" alt="">
-    <label>موضوع</label><textarea id="hw-topic" rows="3"></textarea>
     <label>آخر موعد</label><input id="hw-due" type="date" required>
     <p class="muted" id="hw-status"></p>
     <button class="btn">نشر الواجب</button>
   </form>
   <div class="card"><h3>جدولي</h3><div id="sched"></div></div>
-  <div class="card"><h3>واجباتي</h3><div id="myhw"></div></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=41"></script>
-  <script src="js/fb.js?v=41"></script>
+  <script src="js/firebase-config.js?v=42"></script>
+  <script src="js/fb.js?v=42"></script>
   <script>
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -68,18 +63,15 @@
       var el=document.getElementById(id);
       myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
     });
-    var imgData="";
     function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
     function say(ok,msg){ var el=document.getElementById("pub"); el.className=ok?"ok":"bad"; el.textContent=msg; }
+    function yt(src){
+      var m=String(src||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
+      return m ? "https://www.youtube.com/watch?v="+m[1] : String(src||"").trim();
+    }
     function cloud(col,item){
-      var copy=Object.assign({},item);
-      if(copy.image && copy.image.length>750000) copy.image="";
-      return HassadFB.put(col, item.id, copy).then(function(){
-        say(true,"وصل للطلاب على السحابة: "+item.title);
-      }).catch(function(e){
-        say(false,"لم يُرفع للطلاب. "+(e&&e.message||""));
-      });
+      return HassadFB.put(col, item.id, item).then(function(){ say(true,"وصل للطلاب: "+item.title); }).catch(function(e){ say(false,"لم يُرفع. "+(e&&e.message||"")); });
     }
     function when(date,hour){
       if(!date) return hour||"";
@@ -97,30 +89,22 @@
     function draw(){
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
       document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+myGrades.join(" · ");
-      var d=db();
-      document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+' — '+(s.scheduled_time||"")+(s.stream_url?" · رابط":"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
-      document.getElementById("myhw").innerHTML=mine(d.assignments).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+'</div>';}).join("")||'<div class="slot">لا واجبات</div>';
+      document.getElementById("sched").innerHTML=mine(db().live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
     }
-    document.getElementById("hw-file").onchange=function(){
-      var f=this.files&&this.files[0]; if(!f) return;
-      var r=new FileReader(); r.onload=function(){ imgData=r.result; var p=document.getElementById("hw-preview"); p.src=imgData; p.style.display="block"; }; r.readAsDataURL(f);
-    };
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault();
-      var g=document.getElementById("live-grade").value;
-      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:g,stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"live",teacher:u.name||""};
+      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:document.getElementById("live-grade").value,stream_url:yt(document.getElementById("live-embed").value),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"live",teacher:u.name||""};
       var d=db(); d.live_sessions.unshift(item); save(d); cloud("live_sessions", item); draw();
     };
     document.getElementById("hw-form").onsubmit=function(e){
       e.preventDefault();
       var g=document.getElementById("hw-grade").value;
       var title=document.getElementById("hw-title").value.trim();
-      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:g,title:title,topic:document.getElementById("hw-topic").value.trim(),image:"",due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[{q:title||"الواجب",opts:["فهمت","أعيد"],ok:0}],points_each:10,teacher:u.name||""};
-      var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item);
-      document.getElementById("hw-status").textContent="نُشر لطلاب "+g; draw();
+      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:g,title:title,due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[{q:title,opts:["فهمت","أعيد"],ok:0}],points_each:10,teacher:u.name||""};
+      var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item); document.getElementById("hw-status").textContent="نُشر لطلاب "+g; draw();
     };
     draw();
-    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ draw(); });
+    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(draw);
   </script>
 </body>
 </html>

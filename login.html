@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=24" />
-  <link rel="icon" href="assets/logo.svg">
+  <link rel="stylesheet" href="css/style.css?v=34" />
 </head>
 <body>
   <nav class="nav">
@@ -23,28 +22,27 @@
       <div class="field"><label>كلمة المرور</label><input id="password" type="password" required autocomplete="current-password"></div>
       <p class="error" id="login-error"></p>
       <button class="btn" style="width:100%">دخول</button>
-      <p class="hint" id="hint"><a href="register.html">طالب جديد؟ أنشئ حسابك</a></p>
+      <p class="hint" id="hint"><a href="recover.html">نسيت كلمة المرور؟</a> · <a href="register.html">طالب جديد</a></p>
     </form>
   </div>
-  <script src="js/app.js?v=24"></script>
-  <script src="js/roles.js?v=24"></script>
+  <script src="js/app.js?v=34"></script>
+  <script src="js/roles.js?v=34"></script>
   <script>
     var as=new URLSearchParams(location.search).get("as");
     if(as==="teacher"){
       document.getElementById("ttl").textContent="دخول المعلم";
-      document.getElementById("sub").textContent="الحساب ينشئه المدير فقط. لا يمكن التسجيل من هنا.";
+      document.getElementById("sub").textContent="الحساب ينشئه المدير فقط.";
       document.getElementById("lab").textContent="بريد المعلم";
       var em=document.getElementById("email");
       em.type="email"; em.inputMode="email"; em.placeholder=""; em.value="";
-      document.getElementById("hint").textContent="";
+      document.getElementById("hint").innerHTML="";
     }
     if(as==="admin"){
       document.getElementById("ttl").textContent="دخول المدير";
-      document.getElementById("sub").textContent="";
       document.getElementById("lab").textContent="البريد";
       document.getElementById("email").type="email";
       document.getElementById("email").value="admin@hassad.om";
-      document.getElementById("hint").textContent="";
+      document.getElementById("hint").innerHTML="";
     }
   </script>
 </body>

@@ -11,7 +11,6 @@
     header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
     header a.on{background:#0e5160;color:#fff}
     h1{font-size:24px;color:#0e5160;margin:4px 0 4px}
-    .teacher{color:#5c6b70;margin-bottom:12px}
     .tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
     .tabs button{flex:0 0 auto;border:0;background:#fff;color:#0e5160;padding:10px 14px;border-radius:999px;font-weight:800}
     .tabs .on{background:#0e5160;color:#fff}
@@ -35,7 +34,6 @@
     <a id="n-science" href="subject.html?id=science">علوم</a>
   </header>
   <h1 id="title">المادة</h1>
-  <p class="teacher" id="teacher"></p>
   <div class="tabs">
     <button class="on" type="button" onclick="show('live',this)">البث</button>
     <button type="button" onclick="show('lessons',this)">الدروس</button>
@@ -64,39 +62,40 @@
   <section id="hw" class="card" hidden><div id="hw-list"></div></section>
   <div id="quiz-box" class="card" style="display:none"></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=36"></script>
-  <script src="js/fb.js?v=36"></script>
-  <script src="js/app.js?v=36"></script>
-  <script src="js/quiz.js?v=36"></script>
+  <script src="js/firebase-config.js?v=41"></script>
+  <script src="js/fb.js?v=41"></script>
+  <script src="js/app.js?v=41"></script>
+  <script src="js/quiz.js?v=41"></script>
   <script>
     var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
     var id=new URLSearchParams(location.search).get("id")||"math";
     document.getElementById("title").textContent=names[id]||id;
     var n=document.getElementById("n-"+id); if(n) n.className="on";
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+    function embed(src){
+      var m=String(src||"").match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
+      return m ? "https://www.youtube.com/embed/"+m[1] : src;
+    }
     function fill(){
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-      var grade=u&&u.grade;
-      var lives=(data.live_sessions||[]).filter(function(s){return s.subject_id===id && (!grade||!s.grade||s.grade===grade);});
-      var live=lives.find(function(s){return s.stream_url && s.status!=="completed";});
-      var next=lives.find(function(s){return s.status!=="completed";});
-      if(next) document.getElementById("next").textContent="الحصة القادمة: "+next.title+" — "+(next.scheduled_time||"");
+      var lives=(data.live_sessions||[]).filter(function(s){ return !s.subject_id || s.subject_id===id; });
+      var live=lives.find(function(s){return s.stream_url && s.status!=="completed";}) || lives.find(function(s){return s.stream_url;});
+      var next=lives[0];
+      if(next) document.getElementById("next").textContent=(next.title||"حصة")+" — "+(next.scheduled_time||"")+(next.grade?" · "+next.grade:"");
       if(live&&live.stream_url){
-        var src=live.stream_url;
-        var m=src.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
-        if(m) src="https://www.youtube.com/embed/"+m[1];
-        document.getElementById("stage").innerHTML='<iframe src="'+src+'" allowfullscreen></iframe>';
+        document.getElementById("stage").innerHTML='<iframe src="'+embed(live.stream_url)+'" allowfullscreen></iframe>';
       }
       document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return l.subject_id===id;}).map(function(l){return "• "+l.title}).join("<br>"))||"لا دروس بعد";
-      var hws=(data.assignments||[]).filter(function(a){return a.subject_id===id && (!grade||!a.grade||a.grade===grade);});
-      document.getElementById("hw-list").innerHTML=hws.length?hws.map(function(a){
-        return '<div class="card"><strong>'+a.title+'</strong><br><button class="tabs on" style="margin-top:8px" onclick="Hassad.startQuiz && Hassad.startQuiz(\''+a.id+'\')">افتح النشاط</button></div>';
+      var hws=data.assignments||[];
+      document.getElementById("hw-list").innerHTML=hws.length?hws.filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){
+        return '<div class="card"><strong>'+a.title+'</strong><br><button type="button" style="margin-top:8px" onclick="Hassad.startQuiz && Hassad.startQuiz(\''+a.id+'\')">افتح النشاط</button></div>';
       }).join(""):"لا واجبات";
       document.getElementById("arch-list").innerHTML=(lives.filter(function(s){return s.recording_url;}).map(function(s){return "• "+s.title}).join("<br>"))||"لا تسجيلات بعد";
     }
     fill();
-    if(window.HassadFB){ HassadFB.init().then(function(ok){ if(!ok) return; return HassadFB.pull(); }).then(function(){ fill(); }); }
+    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ fill(); });
     function show(name,btn){
       ["live","lessons","arch","hw"].forEach(function(x){document.getElementById(x).hidden=x!==name;});
       document.querySelectorAll(".tabs button").forEach(function(b){b.className="";});

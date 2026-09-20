@@ -37,7 +37,7 @@
       <h1>أنشئ حسابك</h1>
       <p class="hint">اكتب اسمك ورقم هاتفك وصفك.</p>
       <label>الاسم الثلاثي</label><input id="name" required>
-      <label>رقم الهاتف</label><input id="phone" required inputmode="tel" placeholder="9689xxxxxxx">
+      <label>رقم الهاتف</label><input id="phone" required inputmode="tel" placeholder="97787130">
       <label>الصف</label>
       <select id="grade" required>
         <option value="">اختر الصف</option>
@@ -50,21 +50,21 @@
       <p class="err" id="err"></p>
     </form>
     <div class="ok" id="ok">
-      <h2>تم إنشاء حسابك</h2>
-      <p class="hint" style="color:#ead9a0">انسخ واحفظ. الدخول برقم الهاتف من أي جهاز.</p>
+      <h2>تم إنشاء حسابك على السحابة</h2>
+      <p class="hint" style="color:#ead9a0">انسخ كلمة المرور. الدخول من أي متصفح بنفس الرقم.</p>
       <div class="row"><span>الهاتف</span><b id="o-phone"></b></div>
       <div class="row"><span>البريد</span><b id="o-email"></b><button class="copy" type="button" onclick="copyId('o-email',this)">نسخ البريد</button></div>
       <div class="row"><span>كلمة المرور</span><b id="o-pass"></b><button class="copy" type="button" onclick="copyId('o-pass',this)">نسخ الكلمة</button></div>
-      <button class="btn" type="button" onclick="copyBoth(this)">نسخ البريد والكلمة معاً</button>
       <a class="btn" href="login.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">ادخل الآن</a>
     </div>
     <p class="links"><a href="login.html">عندي حساب</a> · <a href="recover.html">نسيت الكلمة</a></p>
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=36"></script>
-  <script src="js/fb.js?v=36"></script>
-  <script src="js/register.js?v=36"></script>
+  <script src="js/firebase-config.js?v=51"></script>
+  <script src="js/fb.js?v=51"></script>
+  <script src="js/register.js?v=51"></script>
   <script>
     function copyText(t){
       if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
@@ -72,10 +72,7 @@
       return Promise.resolve();
     }
     function copyId(id,btn){
-      copyText(document.getElementById(id).textContent).then(function(){ btn.textContent="نُسخ"; setTimeout(function(){btn.textContent=id==="o-email"?"نسخ البريد":"نسخ الكلمة";},1500); });
-    }
-    function copyBoth(btn){
-      copyText("البريد: "+document.getElementById("o-email").textContent+"\nكلمة المرور: "+document.getElementById("o-pass").textContent).then(function(){ btn.textContent="نُسخا معاً"; setTimeout(function(){btn.textContent="نسخ البريد والكلمة معاً";},1500); });
+      copyText(document.getElementById(id).textContent).then(function(){ btn.textContent="نُسخ"; });
     }
   </script>
 </body>

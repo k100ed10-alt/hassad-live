@@ -32,7 +32,7 @@
     <label>التاريخ</label><input id="live-date" type="date" required>
     <label>الوقت</label><input id="live-hour" type="time" required>
     <label>رابط البث</label><input id="live-embed" dir="ltr">
-    <button class="btn">نشر الحصة</button>
+    <button class="btn">نشر الحصة للطلاب</button>
   </form>
   <form class="card" id="hw-form">
     <h3>إضافة واجب تفاعلي</h3>
@@ -41,14 +41,18 @@
     <input id="hw-file" type="file" accept="image/*">
     <img id="hw-preview" alt="">
     <label>موضوع</label>
-    <textarea id="hw-topic" rows="3" placeholder="مثل: الكسور"></textarea>
+    <textarea id="hw-topic" rows="3"></textarea>
     <label>آخر موعد</label><input id="hw-due" type="date" required>
-    <p class="muted" id="hw-status">أرفق الصورة ثم اضغط التحويل. الطالب يحل ويكسب نقاطاً.</p>
-    <button class="btn">حوّل الصورة لنشاط وانشر</button>
+    <p class="muted" id="hw-status">يظهر الواجب لطلاب صفك فقط</p>
+    <button class="btn">حوّل وانشر للطلاب</button>
   </form>
   <div class="card"><h3>جدولي</h3><div id="sched"></div></div>
   <div class="card"><h3>واجباتي</h3><div id="myhw"></div></div>
-  <script src="js/xai-config.js?v=34"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=36"></script>
+  <script src="js/fb.js?v=36"></script>
+  <script src="js/xai-config.js?v=36"></script>
   <script>
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -57,9 +61,14 @@
     else if(u.role==="admin") location.href="admin.html";
     else if(u.role!=="teacher") location.href="home.html";
     var imgData="";
-    function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; d.settings=d.settings||{}; return d; }
+    function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
-    function keyNow(){ return localStorage.getItem("hassad-xai-key") || (window.HASSAD_XAI_KEY||"") || ((db().settings||{}).xaiKey||""); }
+    function cloud(col,item){
+      if(!window.HassadFB) return;
+      var copy=Object.assign({},item);
+      if(copy.image && copy.image.length>750000) copy.image="";
+      HassadFB.init().then(function(){ return HassadFB.put(col, item.id, copy); });
+    }
     function when(date,hour){
       if(!date) return hour||"";
       var p=date.split("-").map(Number); var dt=new Date(p[0],p[1]-1,p[2]); var clock=hour||"";
@@ -75,10 +84,10 @@
     }
     function draw(){
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
-      document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+(u.grade||"");
+      document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+(u.grade||"")+" · يظهر لطلاب هذا الصف";
       var d=db();
       document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
-      document.getElementById("myhw").innerHTML=mine(d.assignments).map(function(s){return '<div class="slot">'+s.title+' · '+((s.questions||[]).length)+' أسئلة</div>';}).join("")||'<div class="slot">لا واجبات</div>';
+      document.getElementById("myhw").innerHTML=mine(d.assignments).map(function(s){return '<div class="slot">'+s.title+'</div>';}).join("")||'<div class="slot">لا واجبات</div>';
     }
     function compress(file){
       return new Promise(function(resolve){
@@ -86,9 +95,9 @@
         r.onload=function(){
           var im=new Image();
           im.onload=function(){
-            var c=document.createElement("canvas"); var w=im.width,h=im.height,max=900;
+            var c=document.createElement("canvas"); var w=im.width,h=im.height,max=800;
             if(w>max){h=Math.round(h*max/w);w=max;} c.width=w;c.height=h;
-            c.getContext("2d").drawImage(im,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72));
+            c.getContext("2d").drawImage(im,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.65));
           }; im.src=r.result;
         }; r.readAsDataURL(file);
       });
@@ -97,52 +106,33 @@
       var f=this.files&&this.files[0]; if(!f) return;
       imgData=await compress(f);
       var p=document.getElementById("hw-preview"); p.src=imgData; p.style.display="block";
-      document.getElementById("hw-status").textContent="الصورة جاهزة للتحويل";
     };
     function fromImage(title,topic,grade){
       var t=topic||title||"الواجب";
       return [
-        {q:"انظر إلى الصورة. ما موضوع الورقة؟",opts:[t,"موضوع مختلف","لا علاقة","لا أعرف"],ok:0},
-        {q:"هذا النشاط لـ "+(grade||"صفك")+". هل حللت من الصورة؟",opts:["نعم، راجعت الصورة","لا بعد"],ok:0},
-        {q:"كيف تجيب عن النشاط؟",opts:["أقرأ الصورة وأختار الإجابة","أتجاهل الصورة","أغلق الصفحة"],ok:0},
-        {q:"كم نقطة تربح على كل إجابة صحيحة؟",opts:["10 نقاط","نقطة واحدة","بلا نقاط"],ok:0},
-        {q:"بعد حل الأسئلة ماذا يحدث؟",opts:["ترتفع نقاطي فوراً","لا شيء"],ok:0}
+        {q:"ما موضوع الورقة؟",opts:[t,"موضوع آخر","لا أعرف"],ok:0},
+        {q:"هل راجعت الصورة؟",opts:["نعم","لا"],ok:0},
+        {q:"كم نقطة للإجابة الصحيحة؟",opts:["10","1","0"],ok:0}
       ];
-    }
-    async function xaiQs(topic,image,key){
-      var content=[{type:"text",text:"اقرأ صورة الواجب وحوّلها إلى 5 أسئلة اختيار من متعدد بالعربية مطابقة للصورة. JSON فقط [{\"q\":\"\",\"opts\":[\"\",\"\",\"\",\"\"],\"ok\":0}]. الموضوع: "+topic}];
-      if(image) content.push({type:"image_url",image_url:{url:image}});
-      var res=await fetch("https://api.x.ai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"grok-2-vision-1212",messages:[{role:"user",content:content}]})});
-      if(!res.ok) throw new Error("xai");
-      var text=(((((await res.json()).choices||[])[0]||{}).message)||{}).content||"";
-      var m=text.match(/\[[\s\S]*\]/); if(!m) throw new Error("nojson");
-      return JSON.parse(m[0]).filter(function(x){return x&&x.q&&x.opts;}).map(function(x){return {q:String(x.q),opts:x.opts.map(String),ok:Number(x.ok)||0};});
     }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault(); var d=db();
-      d.live_sessions.unshift({id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:u.grade||"",stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name});
-      save(d); e.target.reset(); draw();
+      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:u.grade||"",stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name};
+      d.live_sessions.unshift(item); save(d); cloud("live_sessions", item); e.target.reset(); draw();
     };
     document.getElementById("hw-form").onsubmit=async function(e){
       e.preventDefault();
       var title=document.getElementById("hw-title").value.trim();
       var topic=document.getElementById("hw-topic").value.trim();
       var st=document.getElementById("hw-status");
-      if(!imgData){ st.textContent="أرفق صورة الواجب أولاً"; return; }
-      var questions=[];
-      var key=keyNow();
-      st.textContent="جارٍ تحويل الصورة إلى نشاط...";
-      if(key){
-        try{ questions=await xaiQs(topic||title,imgData,key); }catch(err){}
-      }
-      if(!questions.length) questions=fromImage(title,topic,u.grade);
-      var d=db();
-      d.assignments.unshift({id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:u.grade||"",title:title,topic:topic,image:imgData,due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:questions,points_each:10,teacher:u.name});
-      save(d);
-      st.textContent="تم التحويل: "+questions.length+" أسئلة — كل صحيحة +10 نقاط";
+      var questions=fromImage(title,topic,u.grade);
+      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:u.grade||"",title:title,topic:topic,image:imgData||"",due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:questions,points_each:10,teacher:u.name};
+      var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item);
+      st.textContent="نُشر لطلاب "+(u.grade||"الصف")+". كل إجابة +10";
       e.target.reset(); imgData=""; document.getElementById("hw-preview").style.display="none"; draw();
     };
     draw();
+    if(window.HassadFB) HassadFB.init().then(function(ok){ if(ok) return HassadFB.pull(); }).then(function(){ draw(); });
   </script>
 </body>
 </html>

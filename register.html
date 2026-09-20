@@ -19,9 +19,10 @@
     .err{color:#b42318;margin-top:10px;font-weight:700;min-height:18px}
     .ok{display:none;background:#06262e;color:#fff;border-radius:20px;padding:20px;margin-top:14px}
     .ok h2{color:#ead9a0;margin-bottom:8px;font-size:18px}
-    .row{background:#0e5160;border-radius:12px;padding:12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .row span{font-size:13px;opacity:.8}
-    .row b{font-family:ui-monospace,monospace;direction:ltr}
+    .row{background:#0e5160;border-radius:12px;padding:12px;margin:8px 0}
+    .row span{font-size:13px;opacity:.8;display:block}
+    .row b{font-family:ui-monospace,monospace;direction:ltr;display:block;margin:4px 0 8px;word-break:break-all}
+    .copy{background:#ead9a0;color:#06262e;border:0;border-radius:8px;padding:6px 10px;font-weight:800;font-size:13px}
     a{color:#0e5160;font-weight:800}
     .links{text-align:center;margin-top:16px}
   </style>
@@ -34,36 +35,49 @@
     </a>
     <form class="card" id="form">
       <h1>أنشئ حسابك</h1>
-      <p class="hint">اكتب اسمك ورقم هاتفك وصفك. الصفحة تولّد البريد وكلمة المرور وتربطهما برقمك.</p>
+      <p class="hint">اكتب اسمك ورقم هاتفك وصفك. الصفحة تولّد البريد وكلمة المرور.</p>
       <label>الاسم الثلاثي</label>
-      <input id="name" required placeholder="مثل: يوسف العلوي">
+      <input id="name" required>
       <label>رقم الهاتف</label>
-      <input id="phone" required inputmode="tel" placeholder="9689xxxxxxx أو 9xxxxxxx">
+      <input id="phone" required inputmode="tel" placeholder="9689xxxxxxx">
       <label>الصف</label>
       <select id="grade" required>
         <option value="">اختر الصف</option>
-        <option>الصف الخامس</option>
-        <option>الصف السادس</option>
-        <option>الصف السابع</option>
-        <option>الصف الثامن</option>
-        <option>الصف التاسع</option>
-        <option>الصف العاشر</option>
-        <option>الصف الحادي عشر</option>
-        <option>الصف الثاني عشر</option>
+        <option>الصف الخامس</option><option>الصف السادس</option>
+        <option>الصف السابع</option><option>الصف الثامن</option>
+        <option>الصف التاسع</option><option>الصف العاشر</option>
+        <option>الصف الحادي عشر</option><option>الصف الثاني عشر</option>
       </select>
       <button class="btn" type="submit">ولّد بريدي وكلمة مروري</button>
       <p class="err" id="err"></p>
     </form>
     <div class="ok" id="ok">
       <h2>تم إنشاء حسابك</h2>
-      <p class="hint" style="color:#ead9a0">احفظ هذه البيانات. الدخول بعدها برقم الهاتف.</p>
+      <p class="hint" style="color:#ead9a0">انسخ البيانات واحفظها. الدخول برقم الهاتف.</p>
       <div class="row"><span>الهاتف</span><b id="o-phone"></b></div>
-      <div class="row"><span>البريد</span><b id="o-email"></b></div>
-      <div class="row"><span>كلمة المرور</span><b id="o-pass"></b></div>
+      <div class="row"><span>البريد</span><b id="o-email"></b><button class="copy" type="button" onclick="copyId('o-email',this)">نسخ البريد</button></div>
+      <div class="row"><span>كلمة المرور</span><b id="o-pass"></b><button class="copy" type="button" onclick="copyId('o-pass',this)">نسخ الكلمة</button></div>
+      <button class="btn" type="button" onclick="copyBoth(this)">نسخ البريد والكلمة معاً</button>
       <a class="btn" href="login.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">ادخل الآن</a>
     </div>
-    <p class="links"><a href="login.html">عندي حساب مسبقاً</a></p>
+    <p class="links"><a href="login.html">عندي حساب</a> · <a href="recover.html">نسيت الكلمة</a></p>
   </div>
-  <script src="js/register.js?v=24"></script>
+  <script src="js/register.js?v=35"></script>
+  <script>
+    function copyText(t){
+      if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+      var a=document.createElement("textarea"); a.value=t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove();
+      return Promise.resolve();
+    }
+    function copyId(id,btn){
+      var t=document.getElementById(id).textContent;
+      copyText(t).then(function(){ btn.textContent="نُسخ"; setTimeout(function(){btn.textContent=id==="o-email"?"نسخ البريد":"نسخ الكلمة";},1500); });
+    }
+    function copyBoth(btn){
+      var e=document.getElementById("o-email").textContent;
+      var p=document.getElementById("o-pass").textContent;
+      copyText("البريد: "+e+"\nكلمة المرور: "+p).then(function(){ btn.textContent="نُسخا معاً"; setTimeout(function(){btn.textContent="نسخ البريد والكلمة معاً";},1500); });
+    }
+  </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ function parseQuestions(text){
     let q=lines[0].replace(/^س[:：]\s*/,"").replace(/^\d+[\.\)\-]\s*/,"");
     const opts=[]; let ok=0;
     lines.slice(1).forEach(line=>{
-      const m2=line.match(/^(?:[-*]|[أابجد]\)|[A-Da-d1-4]\))\s*(.+)$/);
+      const m2=line.match(/^(?:[-*]|أابجد\)|[A-Da-d1-4]\))\s*(.+)$/);
       if(!m2) return;
       let t=m2[1].trim();
       const star=/\*|صحيح|√/.test(line);
@@ -22,52 +22,37 @@ function parseQuestions(text){
   return out;
 }
 function arN(n){return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d])}
-Hassad.saveHw=function(e){
-  e.preventDefault();
-  const el=document.getElementById("hw-questions");
-  const preview=document.getElementById("hw-preview");
-  const image=(preview&&preview.style.display!=="none"&&preview.src)?preview.src:"";
-  const questions=parseQuestions(el?el.value:"");
-  const data=JSON.parse(localStorage.getItem("hassad-db"));
-  data.assignments=data.assignments||[];
-  data.assignments.unshift({
-    id:"a"+Date.now(),
-    subject_id:document.getElementById("hw-subject").value,
-    title:document.getElementById("hw-title").value,
-    description:questions.length?arN(questions.length)+" أسئلة":"ورقة عمل",
-    due_date:document.getElementById("hw-due").value,
-    created_at:new Date().toISOString().slice(0,10),
-    questions, image
-  });
-  localStorage.setItem("hassad-db",JSON.stringify(data));
-  Hassad.toast("نُشر النشاط");
-  Hassad.renderAdmin();
-  e.target.reset();
-  if(preview){preview.style.display="none";preview.removeAttribute("src");}
-};
+function pushPoints(uid, rec, subId, sub){
+  try{
+    if(window.HassadFB && uid){
+      HassadFB.init().then(function(){
+        HassadFB.put("students", uid, rec);
+        if(subId) HassadFB.put("submissions", subId, sub);
+      });
+    }
+  }catch(e){}
+}
 Hassad.startQuiz=function(assignmentId){
-  const user=Hassad.currentUser();
-  const data=JSON.parse(localStorage.getItem("hassad-db"));
+  const user=(Hassad.currentUser&&Hassad.currentUser())||JSON.parse(localStorage.getItem("hassad-user")||"null");
+  const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
   const a=(data.assignments||[]).find(x=>x.id===assignmentId);
   const box=document.getElementById("quiz-box");
   if(!box){location.href="subject.html?id="+(a?a.subject_id:"math");return;}
-  if(!a){Hassad.toast("الواجب غير موجود");return;}
-  Hassad.switchTab("hw", document.querySelectorAll(".tab")[2]||document.querySelector(".tab"));
+  if(!a){alert("الواجب غير موجود");return;}
   data.submissions=data.submissions||{};
-  const done=data.submissions[assignmentId+"_"+user.uid];
+  data.students=data.students||{};
+  const sid=assignmentId+"_"+(user&&user.uid);
+  const done=data.submissions[sid];
   const img=a.image?`<img src="${a.image}" alt="" style="width:100%;border-radius:16px;margin-bottom:12px">`:"";
   box.style.display="block";
-  box.innerHTML=`<h3 style="color:var(--teal-900);margin-bottom:8px">${a.title}</h3>${img}<div id="quiz-body"></div><p class="hint" id="quiz-score"></p>`;
+  box.innerHTML=`<h3 style="color:#0e5160;margin-bottom:8px">${a.title}</h3>${img}<div id="quiz-body"></div><p class="hint" id="quiz-score"></p>`;
   const body=document.getElementById("quiz-body");
   const qs=a.questions||[];
-  if(!qs.length){
-    body.innerHTML="<p class='hint'>لا أسئلة تفاعلية بعد.</p>";
-    return;
-  }
+  if(!qs.length){ body.innerHTML="<p>لا أسئلة بعد</p>"; return; }
   qs.forEach((item,qi)=>{
     const div=document.createElement("div");
     div.className="card"; div.style.marginBottom="10px";
-    div.innerHTML=`<strong>${arN(qi+1)}) ${item.q}</strong><div class="list" style="margin-top:8px">${item.opts.map((o,oi)=>`<button class="btn-outline qbtn" data-q="${qi}" data-o="${oi}" style="color:var(--teal-900);border-color:#d9d0bc;width:100%;text-align:right">${o}</button>`).join("")}</div>`;
+    div.innerHTML=`<strong>${arN(qi+1)}) ${item.q}</strong><div style="margin-top:8px">${item.opts.map((o,oi)=>`<button class="qbtn" data-q="${qi}" data-o="${oi}" style="display:block;width:100%;text-align:right;margin:6px 0;padding:10px;border-radius:12px;border:1px solid #d9d0bc;background:#fff">${o}</button>`).join("")}</div>`;
     body.appendChild(div);
   });
   if(done) document.getElementById("quiz-score").textContent=`سُجِّل: ${arN(done.score||0)} من ${arN(done.total||qs.length)}`;
@@ -79,34 +64,22 @@ Hassad.startQuiz=function(assignmentId){
       const item=qs[qi];
       const wrap=btn.parentElement;
       wrap.querySelectorAll("button").forEach(b=>b.disabled=true);
-      if(oi===item.ok){btn.style.background="#e5f6ec";btn.style.borderColor="#1b7a4a";answers[qi]=true;}
-      else {btn.style.background="#ffe4e8";btn.style.borderColor="#b42318";wrap.querySelectorAll("button")[item.ok].style.background="#e5f6ec";answers[qi]=false;}
+      if(oi===item.ok){btn.style.background="#e5f6ec";answers[qi]=true;}
+      else {btn.style.background="#ffe4e8";answers[qi]=false; if(wrap.querySelectorAll("button")[item.ok]) wrap.querySelectorAll("button")[item.ok].style.background="#e5f6ec";}
       if(Object.keys(answers).length===qs.length){
         const correct=Object.values(answers).filter(Boolean).length;
         const pts=correct*10;
-        data.submissions[assignmentId+"_"+user.uid]={status:"submitted",score:correct,total:qs.length,points:pts};
-        if(user.uid && data.students && data.students[user.uid]){
-          data.students[user.uid].points=(data.students[user.uid].points||0)+pts;
+        const sub={status:"submitted",score:correct,total:qs.length,points:pts};
+        data.submissions[sid]=sub;
+        if(user && user.uid){
+          var rec=data.students[user.uid]||{name:user.name,email:user.email,phone:user.phone,grade:user.grade,subscription_status:"active",points:0,streak:0};
+          rec.points=(Number(rec.points)||0)+pts;
+          data.students[user.uid]=rec;
+          pushPoints(user.uid, rec, sid, sub);
         }
         localStorage.setItem("hassad-db",JSON.stringify(data));
-        const prog=JSON.parse(localStorage.getItem("hassad-prog")||"{}");
-        prog.points=(prog.points||0)+pts; localStorage.setItem("hassad-prog",JSON.stringify(prog));
         document.getElementById("quiz-score").textContent=`النتيجة: ${arN(correct)} من ${arN(qs.length)} — +${arN(pts)} نقطة`;
-        Hassad.toast("+"+arN(pts)+" نقطة");
       }
     };
   });
-};
-const _rs=Hassad.renderSubject;
-Hassad.renderSubject=function(){
-  if(_rs) _rs();
-  const user=Hassad.currentUser(); if(!user) return;
-  const id=new URLSearchParams(location.search).get("id")||"math";
-  const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
-  const hw=document.getElementById("hw"); if(!hw) return;
-  hw.innerHTML=(data.assignments||[]).filter(a=>a.subject_id===id).map(a=>{
-    const sub=(data.submissions||{})[a.id+"_"+user.uid];
-    const n=(a.questions||[]).length;
-    return `<div class="row"><div><strong>${a.title}</strong><div style="color:var(--muted);font-size:13px">${n?arN(n)+" أسئلة":"واجب"}</div></div><button class="btn" onclick="Hassad.startQuiz('${a.id}')">افتح النشاط</button></div>`;
-  }).join("")||"<p class='hint'>لا واجبات بعد</p>";
 };

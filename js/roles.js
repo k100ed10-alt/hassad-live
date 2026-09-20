@@ -1,5 +1,6 @@
 const ADMIN={email:"admin@hassad.om",password:"Admin#1",name:"مدير حَصاد",role:"admin"};
 const ADMIN_ALIASES=["admin@hassad.om"];
+const ALL_GRADES=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
 function ensureTeachers(){
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
   if(!data.teachers) data.teachers={};
@@ -125,27 +126,36 @@ Hassad.createTeacher=function(e){
   document.querySelectorAll('input[name="tc-grade"]:checked').forEach(function(c){ grades.push(c.value); });
   if(!grades.length){ document.getElementById("tc-msg").textContent="اختر صفاً واحداً على الأقل"; return; }
   const uid="phone_"+phone;
-  const password=(Hassad.genPassword&&Hassad.genPassword())||("Hs-"+Math.random().toString(36).slice(2,8));
-  const rec={name:name,phone:phone,email:"t"+phone+"@hassad.om",password,subject_id:document.getElementById("tc-subject").value,grade:grades[0],grades:grades,role:"teacher"};
+  var prev=data.teachers[uid]||{};
+  const password=prev.password || (Hassad.genPassword&&Hassad.genPassword()) || ("Hs-"+Math.random().toString(36).slice(2,8));
+  const rec=Object.assign({},prev,{name:name||prev.name,phone:phone,email:prev.email||("t"+phone+"@hassad.om"),password:password,subject_id:document.getElementById("tc-subject").value,grade:grades[0],grades:grades,role:"teacher"});
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
   var box=document.getElementById("tc-pass"); if(box) box.value=password;
-  document.getElementById("tc-msg").textContent="يدخل بالهاتف "+phone+" والكلمة "+password;
+  document.getElementById("tc-msg").textContent="حُفظت صفوف المعلم: "+grades.join("، ");
   Hassad.renderTeachers();
-  if(cloudReady()){
-    HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); }).then(function(){
-      document.getElementById("tc-msg").textContent="حُفظ في السحابة. الهاتف "+phone+" · الكلمة "+password;
-    }).catch(function(ex){
-      document.getElementById("tc-msg").textContent="حُفظ محلياً فقط. فحص قواعد Firestore: "+(ex&&ex.message||"");
-    });
-  }
+  if(cloudReady()) HassadFB.put("teachers", uid, rec);
+};
+Hassad.editTeacher=function(id){
+  var data=ensureTeachers();
+  var t=data.teachers[id]; if(!t) return;
+  document.getElementById("tc-name").value=t.name||"";
+  document.getElementById("tc-phone").value=t.phone||"";
+  if(document.getElementById("tc-subject") && t.subject_id) document.getElementById("tc-subject").value=t.subject_id;
+  if(document.getElementById("tc-pass")) document.getElementById("tc-pass").value=t.password||"";
+  document.querySelectorAll('input[name="tc-grade"]').forEach(function(c){
+    c.checked = teacherGrades(t).indexOf(c.value)!==-1;
+  });
+  document.getElementById("tc-msg").textContent="عدّل الصفوف ثم اضغط حفظ";
+  window.scrollTo(0,0);
 };
 Hassad.renderTeachers=function(){
   var tb=document.getElementById("teachers");
   if(!tb) return;
   var data=ensureTeachers();
-  tb.innerHTML=Object.values(data.teachers||{}).map(function(t){
-    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.phone||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+teacherGrades(t).join("، ")+"</td></tr>";
+  tb.innerHTML=Object.keys(data.teachers||{}).map(function(id){
+    var t=data.teachers[id];
+    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.phone||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+teacherGrades(t).join("، ")+" <button type='button' onclick=\"Hassad.editTeacher('"+id+"')\">تعديل</button></td></tr>";
   }).join("") || "<tr><td colspan='4'>لا معلمين بعد</td></tr>";
 };
 Hassad.requireAuth=function(){return Hassad.currentUser&&Hassad.currentUser();};

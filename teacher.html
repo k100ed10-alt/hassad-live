@@ -31,7 +31,8 @@
   <p class="muted" id="meta"></p>
   <p id="pub"></p>
   <div class="card">
-    <h3>أسئلة الطلاب</h3>
+    <h3>أسئلة طلاب صفوفك</h3>
+    <p class="muted">تظهر فقط أسئلة الصفوف المسندة لك</p>
     <div id="qs">لا أسئلة بعد</div>
   </div>
   <form class="card" id="lesson-form">
@@ -62,19 +63,25 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=49"></script>
-  <script src="js/fb.js?v=49"></script>
+  <script src="js/firebase-config.js?v=50"></script>
+  <script src="js/fb.js?v=50"></script>
   <script>
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     if(!u) location.href="login.html?as=teacher";
     else if(u.role==="admin") location.href="admin.html";
     else if(u.role!=="teacher") location.href="home.html";
-    var myGrades=(u.grades&&u.grades.length)?u.grades:(u.grade?[u.grade]:["الصف العاشر"]);
+    var myGrades=(u.grades&&u.grades.length)?u.grades:(u.grade?[u.grade]:[]);
     ["live-grade","hw-grade"].forEach(function(id){
       var el=document.getElementById(id);
       myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
     });
+    function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
+    function teaches(g){
+      if(!g || !myGrades.length) return false;
+      var cg=cleanG(g);
+      return myGrades.some(function(mg){ return mg===g || cleanG(mg)===cg; });
+    }
     function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; d.lessons=d.lessons||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
     function say(ok,msg){ var el=document.getElementById("pub"); el.className=ok?"ok":"bad"; el.textContent=msg; }
@@ -92,7 +99,7 @@
     function mine(list){
       return (list||[]).filter(function(s){
         if(s.subject_id && s.subject_id!=="math") return false;
-        if(s.grade && myGrades.indexOf(s.grade)===-1) return false;
+        if(s.grade && !teaches(s.grade)) return false;
         return true;
       });
     }
@@ -125,6 +132,7 @@
         snap.forEach(function(doc){
           var m=Object.assign({id:doc.id}, doc.data()||{});
           if(m.subject_id && m.subject_id!=="math") return;
+          if(!teaches(m.grade)) return;
           rows.push(m);
         });
         rows.sort(function(a,b){return (b.at||0)-(a.at||0);});
@@ -134,7 +142,7 @@
             +'<input id="r_'+m.id+'" placeholder="اكتب الرد">'
             +'<button class="sbtn" type="button" onclick="replyMsg(\''+m.id+'\')">إرسال الرد</button> '
             +'<button class="del" type="button" onclick="delMsg(\''+m.id+'\')">حذف</button></div>';
-        }).join(""):"لا أسئلة بعد";
+        }).join(""):"لا أسئلة من صفوفك";
       });
     }
     function replyMsg(id){
@@ -154,7 +162,7 @@
     };
     document.getElementById("lesson-form").onsubmit=function(e){
       e.preventDefault();
-      var item={id:"ls"+Date.now(),subject_id:"math",title:document.getElementById("ls-title").value.trim(),note:document.getElementById("ls-note").value.trim(),teacher:u.name||""};
+      var item={id:"ls"+Date.now(),subject_id:"math",grade:document.getElementById("live-grade").value||myGrades[0]||"",title:document.getElementById("ls-title").value.trim(),note:document.getElementById("ls-note").value.trim(),teacher:u.name||""};
       var d=db(); d.lessons.unshift(item); save(d); cloud("lessons", item); e.target.reset(); draw();
     };
     draw();

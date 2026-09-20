@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>استعادة الحساب | حَصاد</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428}
+    .wrap{max-width:420px;margin:40px auto;padding:16px}
+    .card{background:#fff;border:1px solid #e4d9bf;border-radius:18px;padding:20px}
+    h1{font-size:22px;color:#0e5160;margin:0 0 8px}
+    p{color:#5c6b70;font-size:14px;line-height:1.6}
+    label{display:block;font-weight:700;margin:12px 0 6px}
+    input{width:100%;padding:12px;border:1px solid #d9d0bc;border-radius:12px;font:inherit}
+    button{width:100%;margin-top:14px;background:#0e5160;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800}
+    .box{margin-top:14px;background:#faf6ea;border-radius:12px;padding:12px;display:none}
+    .box b{display:block;margin:6px 0;word-break:break-all}
+    a{color:#0e5160}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>نسيت كلمة المرور؟</h1>
+      <p>اكتب رقم الهاتف المسجل. سنظهر البريد ونولّد كلمة سرية جديدة. لا حساب ثاني بنفس الرقم.</p>
+      <label>رقم الهاتف</label>
+      <input id="phone" inputmode="tel" placeholder="9689xxxxxxx">
+      <button type="button" onclick="go()">استعادة</button>
+      <p id="err" style="color:#b42318"></p>
+      <div class="box" id="box">
+        <div>البريد</div><b id="em"></b>
+        <div>كلمة المرور الجديدة</div><b id="pw"></b>
+        <p>احفظهما ثم <a href="login.html">ادخل</a></p>
+      </div>
+      <p><a href="login.html">رجوع للدخول</a></p>
+    </div>
+  </div>
+  <script>
+    function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
+    function norm(raw){
+      var d=digits(raw);
+      if(d.indexOf("00968")===0) d=d.slice(2);
+      if(d.indexOf("968")===0 && d.length>=11) return d.slice(0,11);
+      if(d.length===8 && /^[79]/.test(d)) return "968"+d;
+      return d;
+    }
+    function gen(){var a="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";var s="Hs-";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+    function go(){
+      var phone=norm(document.getElementById("phone").value);
+      var err=document.getElementById("err"); err.textContent="";
+      document.getElementById("box").style.display="none";
+      if(!phone){ err.textContent="اكتب رقم الهاتف"; return; }
+      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+      data.students=data.students||{};
+      var found=null, uid=null;
+      Object.keys(data.students).forEach(function(id){
+        var s=data.students[id]||{};
+        if(s.phone===phone || id==="phone_"+phone){ found=s; uid=id; }
+      });
+      if(!found){ err.textContent="لا حساب بهذا الرقم. إن كنت سجلت من جهاز آخر اطلب من المدير."; return; }
+      var next=gen();
+      found.password=next;
+      data.students[uid]=found;
+      localStorage.setItem("hassad-db", JSON.stringify(data));
+      document.getElementById("em").textContent=found.email||("s"+phone+"@hassad.om");
+      document.getElementById("pw").textContent=next;
+      document.getElementById("box").style.display="block";
+    }
+  </script>
+</body>
+</html>

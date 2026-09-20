@@ -1,5 +1,3 @@
-const ADMIN={phone:"96891436605",email:"admin@hassad.om",password:"Admin#1",name:"مدير حَصاد",role:"admin"};
-const ADMIN_ALIASES=["admin@hassad.om","91436605","96891436605"];
 const ALL_GRADES=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
 function ensureTeachers(){
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
@@ -45,6 +43,9 @@ function asTeacher(t, uid){
 function asStudent(s){
   return {email:s.email,name:s.name,role:"student",uid:s.id,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status||"active"};
 }
+function asAdmin(a, id){
+  return {email:a.email||"",name:a.name||"مدير حَصاد",role:"admin",uid:id||a.id||"uid_admin",phone:a.phone||""};
+}
 function findInSnap(snap, raw, email){
   var hit=null;
   snap.forEach(function(doc){
@@ -53,11 +54,6 @@ function findInSnap(snap, raw, email){
   });
   return hit;
 }
-function isAdminLogin(raw, password){
-  if(!passEq(password, ADMIN.password)) return false;
-  if(ADMIN_ALIASES.indexOf(String(raw||"").toLowerCase())!==-1) return true;
-  return phoneMatch(raw, ADMIN.phone);
-}
 Hassad.loginHandler=function(e){
   e.preventDefault();
   const raw=document.getElementById("email").value.trim();
@@ -65,20 +61,25 @@ Hassad.loginHandler=function(e){
   const password=document.getElementById("password").value;
   const err=document.getElementById("login-error");
   const wantTeacher=new URLSearchParams(location.search).get("as")==="teacher";
+  const wantAdmin=new URLSearchParams(location.search).get("as")==="admin";
   function finish(user){
     if(!user){ if(err) err.textContent="الرقم أو كلمة المرور غير صحيحة."; return; }
     if(user==="badpass"){ if(err) err.textContent="كلمة المرور غير صحيحة."; return; }
     localStorage.setItem("hassad-user", JSON.stringify(user));
     location.href = dest(user);
   }
-  if(isAdminLogin(raw, password)){
-    return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin",phone:ADMIN.phone});
-  }
   function afterCloudFail(){ localLogin(email,password,err,finish,raw,wantTeacher); }
-  if(cloudReady()){
-    if(err) err.textContent="جارٍ التحقق...";
-    HassadFB.init().then(function(ok){
-      if(!ok || !HassadFB.db){ afterCloudFail(); return; }
+  if(!cloudReady()){ afterCloudFail(); return; }
+  if(err) err.textContent="جارٍ التحقق...";
+  HassadFB.init().then(function(ok){
+    if(!ok || !HassadFB.db){ afterCloudFail(); return; }
+    return HassadFB.db.collection("admins").get().then(function(asnap){
+      var admin=findInSnap(asnap, raw, email);
+      if(admin){
+        if(!passEq(admin.rec.password, password)) return finish("badpass");
+        return finish(asAdmin(admin.rec, admin.id));
+      }
+      if(wantAdmin){ finish(null); return; }
       var first=wantTeacher?"teachers":"students";
       var second=wantTeacher?"students":"teachers";
       return HassadFB.db.collection(first).get().then(function(snap){
@@ -97,10 +98,8 @@ Hassad.loginHandler=function(e){
           afterCloudFail();
         });
       });
-    }).catch(afterCloudFail);
-    return;
-  }
-  afterCloudFail();
+    });
+  }).catch(afterCloudFail);
 };
 function localLogin(email,password,err,finish,raw,wantTeacher){
   const data=ensureTeachers();

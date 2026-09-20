@@ -14,11 +14,11 @@
     .tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
     .tabs button{flex:0 0 auto;border:0;background:#fff;color:#0e5160;padding:10px 14px;border-radius:999px;font-weight:800}
     .tabs .on{background:#0e5160;color:#fff}
-    .stage{background:linear-gradient(180deg,#0b3d4a,#06262e);border-radius:22px;min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:#ead9a0;padding:24px;margin-bottom:12px}
-    .stage iframe{width:100%;min-height:220px;border:0;border-radius:18px}
-    .dot{width:14px;height:14px;border-radius:50%;background:#ead9a0;display:inline-block;margin-left:6px}
+    .stage{background:linear-gradient(180deg,#0b3d4a,#06262e);border-radius:22px;min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:#ead9a0;padding:16px;margin-bottom:12px}
+    .stage iframe{width:100%;height:220px;border:0;border-radius:16px;background:#000}
+    .open{display:inline-block;margin-top:12px;background:#ead9a0;color:#06262e;padding:12px 18px;border-radius:999px;font-weight:800;text-decoration:none}
     .chat{background:#fff;border-radius:18px;padding:14px;border:1px solid #e4d9bf}
-    .bubble{background:#f4eee0;border-radius:14px 14px 4px 14px;padding:10px 12px;margin:8px 0;font-size:14px}
+    .bubble{background:#f4eee0;border-radius:14px;padding:10px 12px;margin:8px 0;font-size:14px}
     .row{display:flex;gap:8px;margin-top:10px}
     .row input{flex:1;border:1.5px solid #e4d9bf;border-radius:999px;padding:12px 14px;background:#fbf8f1}
     .row button{background:#c9a227;border:0;border-radius:999px;padding:12px 16px;font-weight:800;color:#06262e}
@@ -42,17 +42,13 @@
   </div>
   <section id="live">
     <div class="stage" id="stage">
-      <div>
-        <span class="dot"></span>
-        <h2 style="margin:8px 0">المعلم لم يبدأ البث بعد</h2>
-        <p id="next">عندما يُنشر الرابط سيظهر الفيديو هنا</p>
-      </div>
+      <div><h2>المعلم لم يبدأ البث بعد</h2><p id="next"></p></div>
     </div>
     <div class="chat">
       <strong>اسأل المعلم</strong>
       <div class="bubble">مرحباً — اكتب سؤالك</div>
       <div class="row">
-        <input id="chat-text" placeholder="مثال: لم أفهم هذه الفكرة...">
+        <input id="chat-text" placeholder="اكتب سؤالك">
         <button type="button" onclick="send()">إرسال</button>
       </div>
     </div>
@@ -64,35 +60,44 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=41"></script>
-  <script src="js/fb.js?v=41"></script>
-  <script src="js/app.js?v=41"></script>
-  <script src="js/quiz.js?v=41"></script>
+  <script src="js/firebase-config.js?v=42"></script>
+  <script src="js/fb.js?v=42"></script>
+  <script src="js/app.js?v=42"></script>
+  <script src="js/quiz.js?v=42"></script>
   <script>
     var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
     var id=new URLSearchParams(location.search).get("id")||"math";
     document.getElementById("title").textContent=names[id]||id;
     var n=document.getElementById("n-"+id); if(n) n.className="on";
-    var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
-    function embed(src){
-      var m=String(src||"").match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
-      return m ? "https://www.youtube.com/embed/"+m[1] : src;
+    function ytId(src){
+      src=String(src||"");
+      var m=src.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
+      return m?m[1]:"";
     }
     function fill(){
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
       var lives=(data.live_sessions||[]).filter(function(s){ return !s.subject_id || s.subject_id===id; });
       var live=lives.find(function(s){return s.stream_url && s.status!=="completed";}) || lives.find(function(s){return s.stream_url;});
-      var next=lives[0];
-      if(next) document.getElementById("next").textContent=(next.title||"حصة")+" — "+(next.scheduled_time||"")+(next.grade?" · "+next.grade:"");
-      if(live&&live.stream_url){
-        document.getElementById("stage").innerHTML='<iframe src="'+embed(live.stream_url)+'" allowfullscreen></iframe>';
+      if(!live){
+        document.getElementById("next").textContent="عندما يُنشر الرابط سيظهر هنا";
+        return;
       }
-      document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return l.subject_id===id;}).map(function(l){return "• "+l.title}).join("<br>"))||"لا دروس بعد";
+      var url=live.stream_url;
+      var vid=ytId(url);
+      var html="<div><strong>"+(live.title||"البث")+"</strong><div style='opacity:.8;margin:6px 0'>"+(live.scheduled_time||"")+"</div>";
+      if(vid){
+        html='<iframe src="https://www.youtube-nocookie.com/embed/'+vid+'?rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+        html += '<div style="padding:10px 0"><a class="open" href="https://www.youtube.com/watch?v='+vid+'" target="_blank" rel="noopener">افتح البث في يوتيوب</a></div>';
+      } else {
+        html += '<a class="open" href="'+url+'" target="_blank" rel="noopener">افتح رابط البث</a></div>';
+      }
+      document.getElementById("stage").innerHTML=html;
       var hws=data.assignments||[];
-      document.getElementById("hw-list").innerHTML=hws.length?hws.filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){
+      document.getElementById("hw-list").innerHTML=hws.filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){
         return '<div class="card"><strong>'+a.title+'</strong><br><button type="button" style="margin-top:8px" onclick="Hassad.startQuiz && Hassad.startQuiz(\''+a.id+'\')">افتح النشاط</button></div>';
-      }).join(""):"لا واجبات";
-      document.getElementById("arch-list").innerHTML=(lives.filter(function(s){return s.recording_url;}).map(function(s){return "• "+s.title}).join("<br>"))||"لا تسجيلات بعد";
+      }).join("")||"لا واجبات";
+      document.getElementById("lessons-list").textContent="لا دروس بعد";
+      document.getElementById("arch-list").textContent="لا تسجيلات بعد";
     }
     fill();
     HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ fill(); });

@@ -19,15 +19,10 @@ function loadDb(){
   return data;
 }
 function saveDb(data){ localStorage.setItem("hassad-db", JSON.stringify(data)); }
-function findByPhone(data, phone){
-  var list=data.students||{};
-  var keys=Object.keys(list);
-  for(var i=0;i<keys.length;i++){
-    var s=list[keys[i]];
-    if(s && (s.phone===phone || String(s.phone||"").slice(-8)===phone.slice(-8))) return {uid:keys[i], rec:s};
-  }
-  if(list["phone_"+phone]) return {uid:"phone_"+phone, rec:list["phone_"+phone]};
-  return null;
+function matchPhone(a,b){
+  var x=String(a||"").replace(/[^0-9]/g,"");
+  var y=String(b||"").replace(/[^0-9]/g,"");
+  return x && y && (x===y || x.slice(-8)===y.slice(-8));
 }
 function registerStudent(e){
   e.preventDefault();
@@ -41,26 +36,40 @@ function registerStudent(e){
   if(!grade){ err.textContent="اختر الصف"; return; }
   var btn=e.target.querySelector("[type=submit]");
   if(btn) btn.disabled=true;
-  err.textContent="جارٍ الحفظ على السحابة...";
-  var email="s"+phone+"@hassad.om";
-  var password=genPass();
+  err.textContent="نبحث عن الحساب في السحابة...";
   var uid="phone_"+phone;
-  var rec={name:name,phone:phone,email:email,password:password,grade:grade,subscription_status:"active",points:0,streak:0,created_at:new Date().toISOString()};
-  function showOk(){
+  var email="s"+phone+"@hassad.om";
+  function showOk(rec, existed){
     var data=loadDb(); data.students[uid]=rec; saveDb(data);
     document.getElementById("form").style.display="none";
     document.getElementById("ok").style.display="block";
     document.getElementById("o-phone").textContent=phone;
-    document.getElementById("o-email").textContent=email;
-    document.getElementById("o-pass").textContent=password;
+    document.getElementById("o-email").textContent=rec.email||email;
+    document.getElementById("o-pass").textContent=rec.password;
+    var h=document.querySelector("#ok h2");
+    if(h) h.textContent=existed?"الحساب موجود — هذه كلمة المرور الثابتة":"تم إنشاء حسابك على السحابة";
   }
-  if(!window.HassadFB){ err.textContent="لا يوجد اتصال. حدّث الصفحة."; if(btn) btn.disabled=false; return; }
+  if(!window.HassadFB){ err.textContent="لا يوجد اتصال."; if(btn) btn.disabled=false; return; }
   HassadFB.init().then(function(){
-    return HassadFB.put("students", uid, rec);
-  }).then(function(){
-    showOk();
+    return HassadFB.db.collection("students").get();
+  }).then(function(snap){
+    var found=null;
+    snap.forEach(function(doc){
+      var s=Object.assign({id:doc.id}, doc.data());
+      if(matchPhone(s.phone||doc.id, phone)) found=s;
+    });
+    if(found && found.password){
+      found.name=name||found.name;
+      found.grade=grade||found.grade;
+      found.phone=phone;
+      return HassadFB.put("students", found.id||uid, {name:found.name,grade:found.grade,phone:phone}).then(function(){
+        showOk(found, true);
+      });
+    }
+    var rec={name:name,phone:phone,email:email,password:genPass(),grade:grade,subscription_status:"active",points:0,streak:0,created_at:new Date().toISOString()};
+    return HassadFB.put("students", uid, rec).then(function(){ showOk(rec, false); });
   }).catch(function(ex){
-    err.textContent="لم يُحفظ على السحابة. فعّل Anonymous وأضف hassad.live في Authorized domains. "+(ex&&ex.message||"");
+    err.textContent="لم يُحفظ. "+(ex&&ex.message||"");
     if(btn) btn.disabled=false;
   });
 }

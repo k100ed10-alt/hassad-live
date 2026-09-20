@@ -20,6 +20,7 @@ function dest(user){
   if(user.role==="teacher") return "teacher.html";
   return "home.html";
 }
+function cloudReady(){ return window.HassadFB && typeof firebase!=="undefined"; }
 Hassad.loginHandler=function(e){
   e.preventDefault();
   const raw=document.getElementById("email").value.trim();
@@ -32,12 +33,43 @@ Hassad.loginHandler=function(e){
     localStorage.setItem("hassad-user", JSON.stringify(user));
     location.href = dest(user);
   }
-  localLogin(email,password,err,finish,raw);
-};
-function localLogin(email,password,err,finish,raw){
   if(ADMIN_ALIASES.includes(email)&&password===ADMIN.password){
     return finish({email:ADMIN.email,name:ADMIN.name,role:"admin",uid:"uid_admin"});
   }
+  if(cloudReady()){
+    if(err) err.textContent="جارٍ التحقق من السحابة...";
+    HassadFB.init().then(function(ok){
+      if(!ok || !HassadFB.db){ localLogin(email,password,err,finish,raw); return; }
+      var phone=normPhone(raw);
+      HassadFB.db.collection("teachers").where("email","==",email).limit(1).get().then(function(snap){
+        if(!snap.empty){
+          var t=Object.assign({id:snap.docs[0].id}, snap.docs[0].data());
+          if(t.password!==password) return finish("badpass");
+          return finish({email:t.email,name:t.name,role:"teacher",uid:t.id,subject_id:t.subject_id,grade:t.grade});
+        }
+        var q=phone? HassadFB.db.collection("students").doc("phone_"+phone).get() : Promise.resolve({exists:false});
+        return q.then(function(doc){
+          if(doc && doc.exists){
+            var s=Object.assign({id:doc.id}, doc.data());
+            if(s.password!==password) return finish("badpass");
+            return finish({email:s.email,name:s.name,role:"student",uid:s.id,grade:s.grade,phone:s.phone,subscription_status:s.subscription_status});
+          }
+          return HassadFB.db.collection("students").where("email","==",email).limit(1).get().then(function(ss){
+            if(!ss.empty){
+              var s2=Object.assign({id:ss.docs[0].id}, ss.docs[0].data());
+              if(s2.password!==password) return finish("badpass");
+              return finish({email:s2.email,name:s2.name,role:"student",uid:s2.id,grade:s2.grade,phone:s2.phone,subscription_status:s2.subscription_status});
+            }
+            localLogin(email,password,err,finish,raw);
+          });
+        });
+      }).catch(function(){ localLogin(email,password,err,finish,raw); });
+    });
+    return;
+  }
+  localLogin(email,password,err,finish,raw);
+};
+function localLogin(email,password,err,finish,raw){
   const data=ensureTeachers();
   const tEntry=Object.entries(data.teachers||{}).find(([,t])=>t.email && t.email.toLowerCase()===email);
   if(tEntry){
@@ -78,6 +110,11 @@ Hassad.createTeacher=function(e){
   if(box) box.value=password;
   document.getElementById("tc-msg").textContent="كلمة المرور: "+password+" — أرسل: "+email+" / "+password;
   Hassad.renderTeachers();
+  if(cloudReady()){
+    HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); }).then(function(){
+      document.getElementById("tc-msg").textContent="كلمة المرور: "+password+" — حُفظ في السحابة. يدخل من أي هاتف.";
+    }).catch(function(){});
+  }
 };
 Hassad.renderTeachers=function(){
   var tb=document.getElementById("teachers");

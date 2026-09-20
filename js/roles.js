@@ -21,8 +21,14 @@ function dest(user){
   return "home.html";
 }
 function cloudReady(){ return window.HassadFB && typeof firebase!=="undefined"; }
+function teacherGrades(t){
+  if(t && Array.isArray(t.grades) && t.grades.length) return t.grades;
+  if(t && t.grade) return [t.grade];
+  return [];
+}
 function asTeacher(t, uid){
-  return {email:t.email||"",name:t.name,role:"teacher",uid:uid||t.id,subject_id:t.subject_id,grade:t.grade,phone:t.phone||""};
+  var gs=teacherGrades(t);
+  return {email:t.email||"",name:t.name,role:"teacher",uid:uid||t.id,subject_id:t.subject_id,grade:gs[0]||"",grades:gs,phone:t.phone||""};
 }
 Hassad.loginHandler=function(e){
   e.preventDefault();
@@ -127,31 +133,34 @@ Hassad.createTeacher=function(e){
   e.preventDefault();
   const data=ensureTeachers();
   const name=document.getElementById("tc-name").value.trim();
-  const phone=normPhone(document.getElementById("tc-phone")?document.getElementById("tc-phone").value:(document.getElementById("tc-email")||{}).value);
+  const phone=normPhone(document.getElementById("tc-phone")?document.getElementById("tc-phone").value:"");
   if(!phone){ document.getElementById("tc-msg").textContent="اكتب رقم هاتف المعلم"; return; }
+  var grades=[];
+  document.querySelectorAll('input[name="tc-grade"]:checked').forEach(function(c){ grades.push(c.value); });
+  if(!grades.length && document.getElementById("tc-grade")) grades=[document.getElementById("tc-grade").value];
+  if(!grades.length){ document.getElementById("tc-msg").textContent="اختر صفاً واحداً على الأقل"; return; }
   if(Object.values(data.teachers).some(function(t){return t.phone===phone;})){
     document.getElementById("tc-msg").textContent="هذا الرقم مسجل مسبقاً";
     return;
   }
   const uid="phone_"+phone;
   const password=(Hassad.genPassword&&Hassad.genPassword())||("Hs-"+Math.random().toString(36).slice(2,8));
-  const rec={name:name,phone:phone,email:"t"+phone+"@hassad.om",password,subject_id:document.getElementById("tc-subject").value,grade:document.getElementById("tc-grade").value,role:"teacher"};
+  const rec={name:name,phone:phone,email:"t"+phone+"@hassad.om",password,subject_id:document.getElementById("tc-subject").value,grade:grades[0],grades:grades,role:"teacher"};
   data.teachers[uid]=rec;
   localStorage.setItem("hassad-db",JSON.stringify(data));
   var box=document.getElementById("tc-pass");
   if(box) box.value=password;
-  document.getElementById("tc-msg").textContent="يدخل برقم الهاتف "+phone+" والكلمة "+password;
+  document.getElementById("tc-msg").textContent="يدخل بالهاتف "+phone+" والكلمة "+password+" — الصفوف: "+grades.join("، ");
   Hassad.renderTeachers();
-  if(cloudReady()){
-    HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); });
-  }
+  if(cloudReady()) HassadFB.init().then(function(){ return HassadFB.put("teachers", uid, rec); });
 };
 Hassad.renderTeachers=function(){
   var tb=document.getElementById("teachers");
   if(!tb) return;
   var data=ensureTeachers();
   tb.innerHTML=Object.values(data.teachers||{}).map(function(t){
-    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.phone||t.email||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+(t.grade||"")+"</td></tr>";
+    var gs=teacherGrades(t).join("، ");
+    return "<tr><td>"+(t.name||"")+"</td><td>"+(t.phone||t.email||"")+"</td><td><code>"+(t.password||"")+"</code></td><td>"+gs+"</td></tr>";
   }).join("") || "<tr><td colspan='4'>لا معلمين بعد</td></tr>";
 };
 Hassad.requireAuth=function(){return Hassad.currentUser&&Hassad.currentUser();};

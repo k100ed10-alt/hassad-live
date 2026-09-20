@@ -58,15 +58,22 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=45"></script>
-  <script src="js/fb.js?v=45"></script>
+  <script src="js/firebase-config.js?v=46"></script>
+  <script src="js/fb.js?v=46"></script>
   <script>
     var names={math:"الرياضيات",islamic:"التربية الإسلامية",arabic:"اللغة العربية",science:"العلوم"};
     var id=new URLSearchParams(location.search).get("id")||"math";
     document.getElementById("title").textContent=names[id]||id;
     var n=document.getElementById("n-"+id); if(n) n.className="on";
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+    var myGrade=(u&&u.grade)||"";
     var playerSet=false;
+    function sameGrade(item){
+      if(!item) return false;
+      if(item.subject_id && item.subject_id!==id) return false;
+      if(!myGrade || !item.grade) return !item.grade || item.grade===myGrade;
+      return item.grade===myGrade;
+    }
     function ytId(src){
       var m=String(src||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
       return m?m[1]:"";
@@ -82,6 +89,7 @@
         snap.forEach(function(doc){
           var m=doc.data()||{};
           if(m.subject_id && m.subject_id!==id) return;
+          if(myGrade && m.grade && m.grade!==myGrade) return;
           rows.push(m);
         });
         rows.sort(function(a,b){return (a.at||0)-(b.at||0);});
@@ -90,25 +98,28 @@
     }
     function fill(){
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
-      var lives=(data.live_sessions||[]).filter(function(s){ return !s.subject_id || s.subject_id===id; });
+      var lives=(data.live_sessions||[]).filter(sameGrade);
       var live=lives.find(function(s){return s.stream_url && s.status!=="completed";}) || lives.find(function(s){return s.stream_url;});
-      if(!playerSet && live && ytId(live.stream_url)){
-        playerSet=true;
-        var src="https://www.youtube.com/embed/"+ytId(live.stream_url)+"?playsinline=1&rel=0&modestbranding=1";
-        document.getElementById("stage").innerHTML='<div class="player"><iframe src="'+src+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline></iframe></div>';
+      var stage=document.getElementById("stage");
+      if(live && ytId(live.stream_url)){
+        if(!playerSet){
+          playerSet=true;
+          var src="https://www.youtube.com/embed/"+ytId(live.stream_url)+"?playsinline=1&rel=0&modestbranding=1";
+          stage.innerHTML='<div class="player"><iframe src="'+src+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline></iframe></div>';
+        }
+      } else {
+        playerSet=false;
+        stage.innerHTML='<div class="wait">لا بث لصفك الآن'+(myGrade?'<div style="margin-top:8px;opacity:.8">'+myGrade+'</div>':'')+'</div>';
       }
-      document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(function(l){return !l.subject_id||l.subject_id===id;}).map(function(l){return "<div class='card'><strong>"+l.title+"</strong><div>"+(l.note||"")+"</div></div>";}).join(""))||"لا دروس بعد";
-      document.getElementById("hw-list").innerHTML=((data.assignments||[]).filter(function(a){return !a.subject_id||a.subject_id===id;}).map(function(a){return "<div class='card'><strong>"+a.title+"</strong></div>";}).join(""))||"لا واجبات";
+      document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(sameGrade).map(function(l){return "<div class='card'><strong>"+l.title+"</strong><div>"+(l.note||"")+"</div></div>";}).join(""))||"لا دروس لصفك";
+      document.getElementById("hw-list").innerHTML=((data.assignments||[]).filter(sameGrade).map(function(a){return "<div class='card'><strong>"+a.title+"</strong></div>";}).join(""))||"لا واجبات لصفك";
       document.getElementById("arch-list").textContent="لا تسجيلات بعد";
     }
     function send(){
       var t=document.getElementById("chat-text"); var text=(t.value||"").trim(); if(!text) return;
-      var msg={id:"m"+Date.now(),subject_id:id,grade:(u&&u.grade)||"",name:(u&&u.name)||"طالب",text:text,at:Date.now()};
+      var msg={id:"m"+Date.now(),subject_id:id,grade:myGrade,name:(u&&u.name)||"طالب",text:text,at:Date.now()};
       t.value="";
-      HassadFB.put("messages", msg.id, msg).then(loadChat).catch(function(){
-        var b=document.createElement("div"); b.className="bubble"; b.textContent=text;
-        document.getElementById("bubbles").appendChild(b);
-      });
+      HassadFB.put("messages", msg.id, msg).then(loadChat);
     }
     fill();
     HassadFB.init().then(function(){ HassadFB.pull().then(fill); loadChat(); });

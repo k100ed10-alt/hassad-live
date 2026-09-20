@@ -20,6 +20,7 @@
     .wait{padding:48px 16px;text-align:center;color:#ead9a0}
     .chat{background:#fff;border-radius:18px;padding:14px;border:1px solid #e4d9bf}
     .bubble{background:#f4eee0;border-radius:14px;padding:10px 12px;margin:8px 0;font-size:14px}
+    .reply{background:#e8f3f1;border-radius:14px;padding:10px 12px;margin:4px 0 10px;font-size:14px}
     .row{display:flex;gap:8px;margin-top:10px}
     .row input{flex:1;border:1.5px solid #e4d9bf;border-radius:999px;padding:12px 14px;background:#fbf8f1}
     .row button{background:#c9a227;border:0;border-radius:999px;padding:12px 16px;font-weight:800;color:#06262e}
@@ -55,10 +56,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=46"></script>
-  <script src="js/fb.js?v=46"></script>
+  <script src="js/firebase-config.js?v=48"></script>
+  <script src="js/fb.js?v=48"></script>
   <script>
-    var id="math";
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var myGrade=(u&&u.grade)||"";
     var playerSet=false;
@@ -73,7 +73,10 @@
       return m?m[1]:"";
     }
     function drawChat(rows){
-      document.getElementById("bubbles").innerHTML=rows.map(function(m){return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>';}).join("")||'<div class="bubble">اكتب سؤالك للمعلم</div>';
+      document.getElementById("bubbles").innerHTML=rows.map(function(m){
+        return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>'
+          +(m.reply?'<div class="reply"><b>المعلم</b> '+m.reply+'</div>':'');
+      }).join("")||'<div class="bubble">اكتب سؤالك للمعلم</div>';
     }
     function loadChat(){
       if(!HassadFB.db) return;
@@ -113,7 +116,7 @@
       t.value=""; HassadFB.put("messages", msg.id, msg).then(loadChat);
     }
     fill();
-    HassadFB.init().then(function(){ HassadFB.pull().then(fill); loadChat(); });
+    HassadFB.init().then(function(){ HassadFB.pull().then(fill); loadChat(); setInterval(loadChat,8000); });
     function show(name,btn){
       ["live","lessons","arch","hw"].forEach(function(x){document.getElementById(x).hidden=x!==name;});
       document.querySelectorAll(".tabs button").forEach(function(b){b.className="";});

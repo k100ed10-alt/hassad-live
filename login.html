@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>دخول | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=50" />
+  <link rel="stylesheet" href="css/style.css?v=55" />
 </head>
 <body>
   <nav class="nav">
@@ -28,10 +28,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=50"></script>
-  <script src="js/fb.js?v=50"></script>
-  <script src="js/app.js?v=50"></script>
-  <script src="js/roles.js?v=50"></script>
+  <script src="js/firebase-config.js?v=55"></script>
+  <script src="js/fb.js?v=55"></script>
+  <script src="js/app.js?v=55"></script>
+  <script src="js/roles.js?v=55"></script>
   <script>
     var as=new URLSearchParams(location.search).get("as");
     if(as==="teacher"){
@@ -42,9 +42,10 @@
     }
     if(as==="admin"){
       document.getElementById("ttl").textContent="دخول المدير";
-      document.getElementById("lab").textContent="البريد";
-      document.getElementById("email").type="email";
-      document.getElementById("email").value="admin@hassad.om";
+      document.getElementById("sub").textContent="اكتب رقم هاتف المدير وكلمة المرور.";
+      document.getElementById("lab").textContent="رقم هاتف المدير";
+      document.getElementById("email").type="tel";
+      document.getElementById("email").value="91436605";
       document.getElementById("hint").innerHTML="";
     }
   </script>

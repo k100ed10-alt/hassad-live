@@ -18,15 +18,13 @@ function loadDb(){
   if(!data.students) data.students={};
   return data;
 }
-function saveDb(data){
-  localStorage.setItem("hassad-db", JSON.stringify(data));
-}
+function saveDb(data){ localStorage.setItem("hassad-db", JSON.stringify(data)); }
 function findByPhone(data, phone){
   var list=data.students||{};
   var keys=Object.keys(list);
   for(var i=0;i<keys.length;i++){
     var s=list[keys[i]];
-    if(s && s.phone===phone) return {uid:keys[i], rec:s};
+    if(s && (s.phone===phone || String(s.phone||"").slice(-8)===phone.slice(-8))) return {uid:keys[i], rec:s};
   }
   if(list["phone_"+phone]) return {uid:"phone_"+phone, rec:list["phone_"+phone]};
   return null;
@@ -39,39 +37,31 @@ function registerStudent(e){
   var grade=document.getElementById("grade").value.trim();
   var phone=normPhone(document.getElementById("phone").value);
   if(!name || name.length<3){ err.textContent="اكتب الاسم الثلاثي كاملاً"; return; }
-  if(!phone){ err.textContent="رقم الهاتف غير صحيح. مثال عمان: 9689xxxxxxx"; return; }
+  if(!phone){ err.textContent="رقم الهاتف غير صحيح"; return; }
   if(!grade){ err.textContent="اختر الصف"; return; }
-  var data=loadDb();
-  var exist=findByPhone(data, phone);
-  if(exist){
-    err.textContent="هذا الرقم مسجل مسبقاً. ادخل برقم الهاتف وكلمة المرور.";
-    return;
-  }
+  var btn=e.target.querySelector("[type=submit]");
+  if(btn) btn.disabled=true;
+  err.textContent="جارٍ الحفظ على السحابة...";
   var email="s"+phone+"@hassad.om";
   var password=genPass();
   var uid="phone_"+phone;
-  var rec={
-    name:name,
-    phone:phone,
-    email:email,
-    password:password,
-    grade:grade,
-    subscription_status:"active",
-    points:0,
-    streak:0,
-    created_at:new Date().toISOString()
-  };
-  data.students[uid]=rec;
-  saveDb(data);
-  try{
-    if(window.HassadFB && HassadFB.put){
-      HassadFB.init().then(function(){ HassadFB.put("students", uid, rec); });
-    }
-  }catch(ex){}
-  document.getElementById("form").style.display="none";
-  document.getElementById("ok").style.display="block";
-  document.getElementById("o-phone").textContent=phone;
-  document.getElementById("o-email").textContent=email;
-  document.getElementById("o-pass").textContent=password;
+  var rec={name:name,phone:phone,email:email,password:password,grade:grade,subscription_status:"active",points:0,streak:0,created_at:new Date().toISOString()};
+  function showOk(){
+    var data=loadDb(); data.students[uid]=rec; saveDb(data);
+    document.getElementById("form").style.display="none";
+    document.getElementById("ok").style.display="block";
+    document.getElementById("o-phone").textContent=phone;
+    document.getElementById("o-email").textContent=email;
+    document.getElementById("o-pass").textContent=password;
+  }
+  if(!window.HassadFB){ err.textContent="لا يوجد اتصال. حدّث الصفحة."; if(btn) btn.disabled=false; return; }
+  HassadFB.init().then(function(){
+    return HassadFB.put("students", uid, rec);
+  }).then(function(){
+    showOk();
+  }).catch(function(ex){
+    err.textContent="لم يُحفظ على السحابة. فعّل Anonymous وأضف hassad.live في Authorized domains. "+(ex&&ex.message||"");
+    if(btn) btn.disabled=false;
+  });
 }
 document.getElementById("form").addEventListener("submit", registerStudent);

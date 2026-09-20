@@ -62,37 +62,34 @@
     <div class="box"><strong>متصدرو الصف</strong><div id="board"></div></div>
     <div class="box"><strong>واجبات صفك</strong><div id="hw"></div></div>
   </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=36"></script>
+  <script src="js/fb.js?v=36"></script>
   <script>
     function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
-    var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
-    var role=(u&&u.role||"").toLowerCase();
-    var mail=(u&&u.email||"").toLowerCase();
-    var nm=(u&&u.name||"").toLowerCase();
-    var staff=role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1;
-    if(staff){
-      document.getElementById("student").style.display="none";
-      document.getElementById("staff").style.display="block";
-    } else {
+    function paint(){
+      var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+      var role=(u&&u.role||"").toLowerCase();
+      var mail=(u&&u.email||"").toLowerCase();
+      var nm=(u&&u.name||"").toLowerCase();
+      var staff=role==="admin"||role==="teacher"||mail.indexOf("admin@")===0||nm==="admin"||nm.indexOf("مدير")!==-1;
+      if(staff){
+        document.getElementById("student").style.display="none";
+        document.getElementById("staff").style.display="block";
+        return;
+      }
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
       data.students=data.students||{};
       var rec=u && data.students[u.uid];
-      var myPts=0, myStreak=0;
-      if(rec){
-        myPts=Number(rec.points)||0;
-        myStreak=Number(rec.streak)||0;
-      }
-      if(u){
-        document.getElementById("hi").textContent="مرحباً "+(u.name||"");
-        document.getElementById("gr").textContent=u.grade||"";
-      }
+      var myPts=rec?Number(rec.points)||0:0, myStreak=rec?Number(rec.streak)||0:0;
+      if(u){ document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||""; }
       document.getElementById("pts").textContent="★ "+ar(myPts)+" نقطة";
       document.getElementById("str").textContent="🔥 "+ar(myStreak)+" يوم";
       var grade=u&&u.grade;
       var board=[];
       Object.keys(data.students).forEach(function(id){
-        var s=data.students[id];
-        if(!s||!s.name) return;
-        if(id.indexOf("uid_yousef")===0||id.indexOf("uid_layan")===0||id.indexOf("uid_hamad")===0) return;
+        var s=data.students[id]; if(!s||!s.name) return;
         if(grade && s.grade && s.grade!==grade) return;
         board.push({name:s.name,pts:Number(s.points)||0,me:u&&(id===u.uid||s.email===u.email||s.phone===u.phone)});
       });
@@ -102,10 +99,12 @@
         return '<div class="rank '+(i===0?"gold":"")+(r.me?" me":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+ar(i+1)+'</b> '+r.name+(r.me?" (أنت)":"")+'</span><span>★ '+ar(r.pts)+'</span></div>';
       }).join("") || '<div class="slot">لا نقاط بعد</div>';
       var sessions=(data.live_sessions||[]).filter(function(s){return !grade||!s.grade||s.grade===grade;});
-      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
+      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+(s.scheduled_time?" — "+s.scheduled_time:"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
       var hws=(data.assignments||[]).filter(function(a){return !grade||!a.grade||a.grade===grade;});
-      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot">'+a.title+'</div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id='+(a.subject_id||"math")+'">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
     }
+    paint();
+    if(window.HassadFB){ HassadFB.init().then(function(ok){ if(!ok) return; return HassadFB.pull(); }).then(function(){ paint(); }); }
   </script>
 </body>
 </html>

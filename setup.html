@@ -19,51 +19,30 @@
 <body>
   <div class="card">
     <h1>تفعيل المنصة</h1>
-    <p>1) افتح Firebase → Firestore → Rules وانشر هذا النص:</p>
-    <pre>rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}</pre>
-    <p>2) اضغط الزر لإنشاء المجموعات وحساب معلم للتجربة.</p>
+    <p>قواعدك تطلب تسجيل دخول. فعّل في Firebase → Authentication → Sign-in method → <b>Anonymous</b>.</p>
     <p id="st" class="bad">لم يُختبر بعد</p>
     <label>اسم المعلم</label><input id="name" value="معلم التجربة">
     <label>هاتف المعلم</label><input id="phone" value="96893238258">
     <label>كلمة المرور</label><input id="pass" value="Hs-Fp4ShS">
-    <button type="button" onclick="go()">أنشئ المجموعات وحفظ المعلم</button>
-    <p><a href="login.html?as=teacher">دخول المعلم</a> · <a href="login.html?as=admin">دخول المدير</a></p>
+    <button type="button" onclick="go()">جرّب الربط واحفظ المعلم</button>
+    <p><a href="login.html?as=teacher">دخول المعلم</a></p>
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/fb.js"></script>
+  <script src="js/firebase-config.js?v=39"></script>
+  <script src="js/fb.js?v=39"></script>
   <script>
     function go(){
       var st=document.getElementById("st");
-      st.className="bad"; st.textContent="جارٍ الكتابة...";
-      HassadFB.init().then(function(ok){
-        if(!ok){ st.textContent="فشل الاتصال بـ Firebase"; return; }
-        var phone=document.getElementById("phone").value.replace(/[^0-9]/g,"");
-        if(phone.length===8) phone="968"+phone;
-        var rec={name:document.getElementById("name").value,phone:phone,password:document.getElementById("pass").value,role:"teacher",subject_id:"math",grade:"الصف العاشر",grades:["الصف العاشر","الصف الحادي عشر"],email:"t"+phone+"@hassad.om"};
-        return Promise.all([
-          HassadFB.put("teachers","phone_"+phone,rec),
-          HassadFB.put("students","_init",{ok:true}),
-          HassadFB.put("live_sessions","_init",{ok:true}),
-          HassadFB.put("assignments","_init",{ok:true})
-        ]).then(function(){
-          var data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
-          data.teachers=data.teachers||{}; data.teachers["phone_"+phone]=rec;
-          localStorage.setItem("hassad-db",JSON.stringify(data));
-          st.className="ok";
-          st.textContent="تم. المعلم يدخل بـ "+phone+" و "+rec.password;
-        });
+      st.className="bad"; st.textContent="جارٍ...";
+      var phone=document.getElementById("phone").value.replace(/[^0-9]/g,"");
+      if(phone.length===8) phone="968"+phone;
+      var rec={name:document.getElementById("name").value,phone:phone,password:document.getElementById("pass").value,role:"teacher",subject_id:"math",grade:"الصف العاشر",grades:["الصف العاشر","الصف الحادي عشر"],email:"t"+phone+"@hassad.om"};
+      HassadFB.put("teachers","phone_"+phone,rec).then(function(){
+        st.className="ok"; st.textContent="نجح. المعلم يدخل بـ "+phone+" / "+rec.password;
       }).catch(function(e){
-        st.className="bad";
-        st.textContent="مرفوض. انشر قواعد Firestore أولاً. "+(e&&e.message||"");
+        st.textContent="رفض الكتابة. فعّل Anonymous أو اسمح الكتابة. "+(e&&e.message||"");
       });
     }
   </script>

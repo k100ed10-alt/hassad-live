@@ -28,14 +28,16 @@
   <p class="muted" id="meta"></p>
   <form class="card" id="live-form">
     <h3>إضافة حصة</h3>
+    <label>لأي صف؟</label><select id="live-grade"></select>
     <label>العنوان</label><input id="live-title" required>
     <label>التاريخ</label><input id="live-date" type="date" required>
     <label>الوقت</label><input id="live-hour" type="time" required>
     <label>رابط البث</label><input id="live-embed" dir="ltr">
-    <button class="btn">نشر الحصة للطلاب</button>
+    <button class="btn">نشر الحصة لهذا الصف</button>
   </form>
   <form class="card" id="hw-form">
     <h3>إضافة واجب تفاعلي</h3>
+    <label>لأي صف؟</label><select id="hw-grade"></select>
     <label>العنوان</label><input id="hw-title" required>
     <label>صورة الواجب</label>
     <input id="hw-file" type="file" accept="image/*">
@@ -43,16 +45,15 @@
     <label>موضوع</label>
     <textarea id="hw-topic" rows="3"></textarea>
     <label>آخر موعد</label><input id="hw-due" type="date" required>
-    <p class="muted" id="hw-status">يظهر الواجب لطلاب صفك فقط</p>
-    <button class="btn">حوّل وانشر للطلاب</button>
+    <p class="muted" id="hw-status">اختر الصف ثم انشر</p>
+    <button class="btn">حوّل وانشر لهذا الصف</button>
   </form>
   <div class="card"><h3>جدولي</h3><div id="sched"></div></div>
   <div class="card"><h3>واجباتي</h3><div id="myhw"></div></div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=36"></script>
-  <script src="js/fb.js?v=36"></script>
-  <script src="js/xai-config.js?v=36"></script>
+  <script src="js/firebase-config.js?v=38"></script>
+  <script src="js/fb.js?v=38"></script>
   <script>
     var NAMES={math:"الرياضيات",islamic:"الإسلامية",arabic:"العربية",science:"العلوم"};
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -60,6 +61,11 @@
     if(!u) location.href="login.html?as=teacher";
     else if(u.role==="admin") location.href="admin.html";
     else if(u.role!=="teacher") location.href="home.html";
+    var myGrades=(u.grades&&u.grades.length)?u.grades:(u.grade?[u.grade]:["الصف الخامس"]);
+    ["live-grade","hw-grade"].forEach(function(id){
+      var el=document.getElementById(id);
+      myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
+    });
     var imgData="";
     function db(){ var d={}; try{d=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){} d.live_sessions=d.live_sessions||[]; d.assignments=d.assignments||[]; return d; }
     function save(d){ localStorage.setItem("hassad-db", JSON.stringify(d)); }
@@ -78,16 +84,16 @@
     function mine(list){
       return (list||[]).filter(function(s){
         if(u.subject_id && s.subject_id && s.subject_id!==u.subject_id) return false;
-        if(u.grade && s.grade && s.grade!==u.grade) return false;
+        if(s.grade && myGrades.indexOf(s.grade)===-1) return false;
         return true;
       });
     }
     function draw(){
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
-      document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+(u.grade||"")+" · يظهر لطلاب هذا الصف";
+      document.getElementById("meta").textContent=(NAMES[u.subject_id]||"")+" · "+myGrades.join(" · ");
       var d=db();
-      document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.scheduled_time||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
-      document.getElementById("myhw").innerHTML=mine(d.assignments).map(function(s){return '<div class="slot">'+s.title+'</div>';}).join("")||'<div class="slot">لا واجبات</div>';
+      document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+' — '+(s.scheduled_time||"")+'</div>';}).join("")||'<div class="slot">لا حصص</div>';
+      document.getElementById("myhw").innerHTML=mine(d.assignments).map(function(s){return '<div class="slot">'+s.title+' — '+(s.grade||"")+'</div>';}).join("")||'<div class="slot">لا واجبات</div>';
     }
     function compress(file){
       return new Promise(function(resolve){
@@ -107,28 +113,20 @@
       imgData=await compress(f);
       var p=document.getElementById("hw-preview"); p.src=imgData; p.style.display="block";
     };
-    function fromImage(title,topic,grade){
-      var t=topic||title||"الواجب";
-      return [
-        {q:"ما موضوع الورقة؟",opts:[t,"موضوع آخر","لا أعرف"],ok:0},
-        {q:"هل راجعت الصورة؟",opts:["نعم","لا"],ok:0},
-        {q:"كم نقطة للإجابة الصحيحة؟",opts:["10","1","0"],ok:0}
-      ];
-    }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault(); var d=db();
-      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:u.grade||"",stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name};
+      var g=document.getElementById("live-grade").value;
+      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:u.subject_id||"math",grade:g,stream_url:document.getElementById("live-embed").value.trim(),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"upcoming",teacher:u.name};
       d.live_sessions.unshift(item); save(d); cloud("live_sessions", item); e.target.reset(); draw();
     };
-    document.getElementById("hw-form").onsubmit=async function(e){
+    document.getElementById("hw-form").onsubmit=function(e){
       e.preventDefault();
       var title=document.getElementById("hw-title").value.trim();
       var topic=document.getElementById("hw-topic").value.trim();
-      var st=document.getElementById("hw-status");
-      var questions=fromImage(title,topic,u.grade);
-      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:u.grade||"",title:title,topic:topic,image:imgData||"",due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:questions,points_each:10,teacher:u.name};
+      var g=document.getElementById("hw-grade").value;
+      var item={id:"a"+Date.now(),subject_id:u.subject_id||"math",grade:g,title:title,topic:topic,image:imgData||"",due_date:document.getElementById("hw-due").value,created_at:new Date().toISOString().slice(0,10),questions:[{q:"ما موضوع الورقة؟",opts:[topic||title,"موضوع آخر","لا أعرف"],ok:0},{q:"كم نقطة للإجابة الصحيحة؟",opts:["10","1","0"],ok:0}],points_each:10,teacher:u.name};
       var d=db(); d.assignments.unshift(item); save(d); cloud("assignments", item);
-      st.textContent="نُشر لطلاب "+(u.grade||"الصف")+". كل إجابة +10";
+      document.getElementById("hw-status").textContent="نُشر لطلاب "+g;
       e.target.reset(); imgData=""; document.getElementById("hw-preview").style.display="none"; draw();
     };
     draw();

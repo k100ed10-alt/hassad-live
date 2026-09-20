@@ -26,13 +26,13 @@
 <body>
   <header>
     <h1 id="hi">لوحة المعلم</h1>
-    <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='index.html'">خروج</button>
+    <button class="out" type="button" onclick="localStorage.removeItem('hassad-user');location.href='login.html?as=teacher'">خروج</button>
   </header>
   <p class="muted" id="meta"></p>
   <p id="pub"></p>
   <div class="card">
     <h3>أسئلة طلاب صفوفك</h3>
-    <p class="muted">تظهر فقط أسئلة الصفوف المسندة لك</p>
+    <p class="muted">تتحدث الصفوف من لوحة المدير تلقائياً</p>
     <div id="qs">لا أسئلة بعد</div>
   </div>
   <form class="card" id="lesson-form">
@@ -63,8 +63,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=50"></script>
-  <script src="js/fb.js?v=50"></script>
+  <script src="js/firebase-config.js?v=56"></script>
+  <script src="js/fb.js?v=56"></script>
   <script>
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
@@ -72,10 +72,18 @@
     else if(u.role==="admin") location.href="admin.html";
     else if(u.role!=="teacher") location.href="home.html";
     var myGrades=(u.grades&&u.grades.length)?u.grades:(u.grade?[u.grade]:[]);
-    ["live-grade","hw-grade"].forEach(function(id){
-      var el=document.getElementById(id);
-      myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
-    });
+    function fillSelects(){
+      ["live-grade","hw-grade"].forEach(function(id){
+        var el=document.getElementById(id); el.innerHTML="";
+        myGrades.forEach(function(g){ var o=document.createElement("option"); o.textContent=g; o.value=g; el.appendChild(o); });
+      });
+    }
+    fillSelects();
+    function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
+    function phoneMatch(a,b){
+      var x=digits(a), y=digits(b);
+      return x&&y&&(x===y||x.slice(-8)===y.slice(-8));
+    }
     function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
     function teaches(g){
       if(!g || !myGrades.length) return false;
@@ -113,7 +121,7 @@
     }
     function draw(){
       document.getElementById("hi").textContent="مرحباً "+(u.name||"");
-      document.getElementById("meta").textContent="الرياضيات · "+myGrades.join(" · ");
+      document.getElementById("meta").textContent="الرياضيات · "+(myGrades.join(" · ")||"لا صفوف");
       var d=db();
       document.getElementById("sched").innerHTML=mine(d.live_sessions).map(function(s){
         return '<div class="slot"><span>'+s.title+' — '+(s.grade||"")+' — '+(s.scheduled_time||"")+'</span><button class="del" type="button" onclick="drop(\'live_sessions\',\''+s.id+'\')">حذف البث</button></div>';
@@ -124,6 +132,22 @@
       document.getElementById("lslst").innerHTML=mine(d.lessons).map(function(s){
         return '<div class="slot"><span>'+s.title+'</span><button class="del" type="button" onclick="drop(\'lessons\',\''+s.id+'\')">حذف الدرس</button></div>';
       }).join("")||'<div class="slot">لا دروس</div>';
+    }
+    function applyCloudTeacher(t){
+      var gs=(t.grades&&t.grades.length)?t.grades:(t.grade?[t.grade]:myGrades);
+      myGrades=gs;
+      u.grades=gs; u.grade=gs[0]||""; u.name=t.name||u.name; u.subject_id=t.subject_id||u.subject_id;
+      localStorage.setItem("hassad-user", JSON.stringify(u));
+      fillSelects(); draw();
+    }
+    function refreshTeacher(){
+      if(!HassadFB.db) return Promise.resolve();
+      return HassadFB.db.collection("teachers").get().then(function(snap){
+        snap.forEach(function(doc){
+          var t=Object.assign({id:doc.id}, doc.data());
+          if(phoneMatch(t.phone||doc.id, u.phone||u.uid)) applyCloudTeacher(t);
+        });
+      });
     }
     function loadQs(){
       if(!HassadFB.db) return;
@@ -166,7 +190,7 @@
       var d=db(); d.lessons.unshift(item); save(d); cloud("lessons", item); e.target.reset(); draw();
     };
     draw();
-    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ draw(); loadQs(); setInterval(loadQs,10000); });
+    HassadFB.init().then(function(){ return HassadFB.pull(); }).then(function(){ return refreshTeacher(); }).then(function(){ draw(); loadQs(); setInterval(function(){ refreshTeacher(); loadQs(); },15000); });
   </script>
 </body>
 </html>

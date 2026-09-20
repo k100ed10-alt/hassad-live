@@ -7,9 +7,10 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,Tahoma,sans-serif;background:#f4eee0;color:#1a2428;padding:12px 12px 24px}
-    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px}
-    header a{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px}
+    header{background:#06262e;border-radius:16px;padding:8px;margin-bottom:12px;display:flex;align-items:center}
+    header a,header button{color:#ead9a0;text-decoration:none;padding:8px 12px;display:inline-block;font-weight:700;border-radius:999px;border:0;background:transparent;font:inherit}
     header a.on{background:#0e5160;color:#fff}
+    header .leave{margin-right:auto;color:#ffd6db}
     h1{font-size:24px;color:#0e5160;margin:4px 0 10px}
     .tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
     .tabs button{flex:0 0 auto;border:0;background:#fff;color:#0e5160;padding:10px 14px;border-radius:999px;font-weight:800}
@@ -31,6 +32,7 @@
   <header>
     <a href="home.html">الرئيسية</a>
     <a class="on" href="subject.html?id=math">رياضيات</a>
+    <button class="leave" type="button" onclick="localStorage.removeItem('hassad-user');location.href='login.html'">خروج</button>
   </header>
   <h1>الرياضيات</h1>
   <div class="tabs">
@@ -56,8 +58,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=48"></script>
-  <script src="js/fb.js?v=48"></script>
+  <script src="js/firebase-config.js?v=53"></script>
+  <script src="js/fb.js?v=53"></script>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var myGrade=(u&&u.grade)||"";

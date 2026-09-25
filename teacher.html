@@ -63,8 +63,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=56"></script>
-  <script src="js/fb.js?v=56"></script>
+  <script src="js/firebase-config.js?v=57"></script>
+  <script src="js/fb.js?v=57"></script>
   <script>
     var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
@@ -103,6 +103,10 @@
       var p=date.split("-").map(Number); var dt=new Date(p[0],p[1]-1,p[2]); var clock=hour||"";
       if(hour && hour.indexOf(":")>=0){ var hh=+hour.split(":")[0], mm=hour.split(":")[1]; var ap=hh>=12?"مساء":"صباح"; hh=hh%12||12; clock=hh+":"+mm+" "+ap; }
       return DAYS[dt.getDay()]+" "+p[2]+"/"+p[1]+" — "+clock;
+    }
+    function isoAt(date,hour){
+      if(!date || !hour) return "";
+      return date+"T"+hour+":00+04:00";
     }
     function mine(list){
       return (list||[]).filter(function(s){
@@ -176,7 +180,9 @@
     function delMsg(id){ HassadFB.del("messages", id).then(loadQs); }
     document.getElementById("live-form").onsubmit=function(e){
       e.preventDefault();
-      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:"math",grade:document.getElementById("live-grade").value,stream_url:yt(document.getElementById("live-embed").value),scheduled_time:when(document.getElementById("live-date").value,document.getElementById("live-hour").value),status:"live",teacher:u.name||""};
+      var date=document.getElementById("live-date").value;
+      var hour=document.getElementById("live-hour").value;
+      var item={id:"l"+Date.now(),title:document.getElementById("live-title").value,subject_id:"math",grade:document.getElementById("live-grade").value,stream_url:yt(document.getElementById("live-embed").value),scheduled_time:when(date,hour),scheduled_at:isoAt(date,hour),status:"live",teacher:u.name||""};
       var d=db(); d.live_sessions.unshift(item); save(d); cloud("live_sessions", item); draw();
     };
     document.getElementById("hw-form").onsubmit=function(e){

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة الإدارة | حَصاد</title>
-  <link rel="stylesheet" href="css/style.css?v=56" />
+  <link rel="stylesheet" href="css/style.css?v=58" />
   <script>
     try{
       var _u=JSON.parse(localStorage.getItem("hassad-user")||"null");
@@ -24,12 +24,18 @@
     <main class="main">
       <div class="topbar"><h1>لوحة المدير</h1></div>
       <p class="hint" id="fb-status">جارٍ ربط السحابة...</p>
+      <form class="card" style="margin-bottom:16px" onsubmit="event.preventDefault();saveXai();">
+        <h3>مفتاح xAI لتحويل الواجب</h3>
+        <p class="hint">من console.x.ai. يُحفظ للمعلم كي يحوّل صورة الواجب إلى أسئلة.</p>
+        <div class="field"><input id="xai-key" type="password" dir="ltr" placeholder="xai-..."></div>
+        <button class="btn">حفظ المفتاح</button>
+        <p class="hint" id="xai-msg"></p>
+      </form>
       <form class="card" style="margin-bottom:16px" onsubmit="Hassad.createTeacher(event)">
         <h3>إنشاء / تعديل معلم</h3>
-        <p class="hint">للتعديل: اضغط تعديل ثم غيّر الصفوف واحفظ.</p>
         <div class="grid-2">
           <div class="field"><label>الاسم</label><input id="tc-name" required></div>
-          <div class="field"><label>رقم الهاتف</label><input id="tc-phone" required inputmode="tel" placeholder="9689xxxxxxx"></div>
+          <div class="field"><label>رقم الهاتف</label><input id="tc-phone" required inputmode="tel"></div>
           <div class="field"><label>المادة</label><select id="tc-subject"></select></div>
           <div class="field"><label>كلمة المرور</label><input id="tc-pass" readonly dir="ltr"></div>
         </div>
@@ -55,11 +61,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=56"></script>
-  <script src="js/fb.js?v=56"></script>
-  <script src="js/app.js?v=56"></script>
-  <script src="js/roles.js?v=56"></script>
-  <script src="js/grade-filter.js?v=56"></script>
+  <script src="js/firebase-config.js?v=58"></script>
+  <script src="js/fb.js?v=58"></script>
+  <script src="js/app.js?v=58"></script>
+  <script src="js/roles.js?v=58"></script>
+  <script src="js/grade-filter.js?v=58"></script>
   <script>
     var grades=["الصف الخامس","الصف السادس","الصف السابع","الصف الثامن","الصف التاسع","الصف العاشر","الصف الحادي عشر","الصف الثاني عشر"];
     var box=document.getElementById("tc-grades");
@@ -77,6 +83,15 @@
     if(ts && !ts.options.length){
       [["math","الرياضيات"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];ts.appendChild(o)});
     }
+    function saveXai(){
+      var k=(document.getElementById("xai-key").value||"").trim();
+      localStorage.setItem("hassad-xai-key", k);
+      var msg=document.getElementById("xai-msg");
+      if(!k){ msg.textContent="مسح المفتاح"; return; }
+      msg.textContent="جارٍ الحفظ...";
+      if(window.HassadFB) HassadFB.put("settings","app",{xaiKey:k}).then(function(){ msg.textContent="حُفظ المفتاح للمعلم"; }).catch(function(){ msg.textContent="حُفظ على هذا الجهاز. أضف قواعد settings إن أردت للمعلم."; });
+      else msg.textContent="حُفظ على هذا الجهاز";
+    }
     if(Hassad.renderAdmin) Hassad.renderAdmin();
     if(Hassad.renderTeachers) Hassad.renderTeachers();
     if(window.HassadFB){
@@ -88,6 +103,10 @@
       }).then(function(){
         if(Hassad.renderTeachers) Hassad.renderTeachers();
         if(Hassad.renderAdmin) Hassad.renderAdmin();
+        if(HassadFB.db) HassadFB.db.collection("settings").doc("app").get().then(function(d){
+          var k=d.exists && d.data() && d.data().xaiKey;
+          if(k){ document.getElementById("xai-key").value=k; localStorage.setItem("hassad-xai-key",k); }
+        });
       });
     }
   </script>

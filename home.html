@@ -28,6 +28,8 @@
     .rank b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f4eee0}
     .gold b{background:#ead9a0}
     .me{background:#f7f1df;margin:0 -14px;padding:10px 14px;border-radius:12px}
+    .bell{width:100%;margin:0 0 12px;background:#ead9a0;color:#06262e;border:0;border-radius:14px;padding:12px;font-weight:800}
+    .soon{background:#fff3c4;border:1px solid #ead9a0;border-radius:14px;padding:12px;margin-bottom:12px;font-weight:700;display:none}
   </style>
 </head>
 <body>
@@ -50,6 +52,8 @@
       <span class="p2" id="str">🔥 ٠ يوم</span>
       <span class="p3" id="gr"></span>
     </div>
+    <button class="bell" id="bell-btn" type="button" onclick="enableBell()">فعّل تنبيه الحصة قبل ٢٠ دقيقة</button>
+    <div class="soon" id="soon"></div>
     <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
     <div class="subs">
       <a class="sub" href="subject.html?id=math"><strong>الرياضيات</strong><div>مفتوحة الآن</div></a>
@@ -59,11 +63,51 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=53"></script>
-  <script src="js/fb.js?v=53"></script>
+  <script src="js/firebase-config.js?v=57"></script>
+  <script src="js/fb.js?v=57"></script>
   <script>
     function out(){ localStorage.removeItem("hassad-user"); location.href="login.html"; }
     function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
+    function sessionAt(s){
+      if(s && s.scheduled_at){ var t=Date.parse(s.scheduled_at); if(!isNaN(t)) return t; }
+      return 0;
+    }
+    function ping(title, body){
+      try{
+        if(window.Notification && Notification.permission==="granted"){
+          new Notification(title,{body:body,tag:"hassad-class"});
+        }
+      }catch(e){}
+      var el=document.getElementById("soon");
+      el.style.display="block";
+      el.textContent=title+" — "+body;
+    }
+    function scheduleBells(sessions){
+      var now=Date.now();
+      sessions.forEach(function(s){
+        var at=sessionAt(s); if(!at) return;
+        var warn=at-20*60*1000;
+        var key="bell_"+(s.id||at);
+        if(localStorage.getItem(key)) return;
+        if(warn<=now && now<at){
+          localStorage.setItem(key,"1");
+          ping("الحصة بعد قليل", (s.title||"حصة الرياضيات")+" · "+(s.scheduled_time||""));
+        } else if(warn>now && warn-now<36*60*60*1000){
+          setTimeout(function(){
+            localStorage.setItem(key,"1");
+            ping("بعد ٢٠ دقيقة حصة", (s.title||"حصة الرياضيات")+" · "+(s.scheduled_time||""));
+          }, warn-now);
+        }
+      });
+    }
+    function enableBell(){
+      var btn=document.getElementById("bell-btn");
+      if(!window.Notification){ btn.textContent="المتصفح لا يدعم الإشعار"; return; }
+      Notification.requestPermission().then(function(p){
+        btn.textContent=p==="granted"?"التنبيه مفعّل قبل الحصة ب٢٠ دقيقة":"اسمح بالإشعار من إعدادات المتصفح";
+        paint();
+      });
+    }
     function paint(){
       var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
       var role=(u&&u.role||"").toLowerCase();
@@ -74,6 +118,9 @@
         document.getElementById("student").style.display="none";
         document.getElementById("staff").style.display="block";
         return;
+      }
+      if(window.Notification && Notification.permission==="granted"){
+        document.getElementById("bell-btn").textContent="التنبيه مفعّل قبل الحصة ب٢٠ دقيقة";
       }
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
       data.students=data.students||{};
@@ -98,6 +145,7 @@
       document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+(s.scheduled_time?" — "+s.scheduled_time:"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
       var hws=(data.assignments||[]).filter(function(a){return (!a.subject_id||a.subject_id==="math") && (!grade||!a.grade||a.grade===grade);});
       document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id=math">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+      scheduleBells(sessions);
     }
     paint();
     if(window.HassadFB){ HassadFB.init().then(function(ok){ if(!ok) return; return HassadFB.pull(); }).then(function(){ paint(); }); }

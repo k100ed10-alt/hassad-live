@@ -13,7 +13,6 @@ function parseQuestions(text){
     var opts=[]; var ok=0;
     lines.slice(1).forEach(function(line){
       var m=line.match(/^[أبجدA-Da-d1-4][\)\.\u060c:]\s*(.+)$/);
-      if(!m) m=line.match(/^[-*•]\s+(?![\d٠-٩])(.+)$/);
       if(!m) return;
       var t=m[1].trim();
       var star=/\*|صحيح|√/.test(line);
@@ -28,8 +27,13 @@ function parseQuestions(text){
 function arN(n){return String(n).replace(/[0-9]/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d];});}
 function esc(s){return String(s||"").replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">");}
 function mathText(s){
-  var t=esc(s).replace(/-/g,"−").replace(/–|—/g,"−");
-  return '<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">'+t+'</span>';
+  var raw=String(s||"");
+  var neg=/(^|[^=])\s*[-\u2212\u2013\u2014]\s*[\d\u0660-\u0669]/.test(raw) || /[\d\u0660-\u0669]\s*[-\u2212]\s*$/.test(raw);
+  if(neg){
+    var num=raw.replace(/[\s*\u2212\u2013\u2014\-]/g," ").replace(/سالب/g,"").replace(/\s+/g," ").trim();
+    return esc("سالب "+num);
+  }
+  return esc(raw);
 }
 function pushPoints(uid, rec, subId, sub){
   try{
@@ -69,12 +73,12 @@ Hassad.startQuiz=function(assignmentId){
     const div=document.createElement("div");
     div.className="card"; div.style.marginBottom="10px";
     div.innerHTML="<strong>"+arN(qi+1)+") "+mathText(item.q)+"</strong><div style=\"margin-top:8px\">"+(item.opts||[]).map(function(o,oi){
-      return '<button class="qbtn" data-q="'+qi+'" data-o="'+oi+'" style="display:block;width:100%;text-align:right;margin:6px 0;padding:10px;border-radius:12px;border:1px solid #d9d0bc;background:#fff">'+mathText(o)+'</button>';
+      return '<button class="qbtn" data-q="'+qi+'" data-o="'+oi+'" style="display:block;width:100%;text-align:right;margin:6px 0;padding:10px 14px;border-radius:12px;border:1px solid #d9d0bc;background:#fff">'+mathText(o)+'</button>';
     }).join("")+"</div>";
     body.appendChild(div);
   });
   if(done){
-    document.getElementById("quiz-score").textContent="سُجِّل: "+arN(done.score||0)+" من "+arN(done.total||qs.length)+" — يمكنك المراجعة بدون نقاط جديدة";
+    document.getElementById("quiz-score").textContent="سُجِّل: "+arN(done.score||0)+" من "+arN(done.total||qs.length);
     body.querySelectorAll(".card").forEach(function(card,qi){
       var item=qs[qi]; if(!item) return;
       var wrap=card.querySelector("div");

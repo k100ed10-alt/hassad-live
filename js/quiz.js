@@ -12,8 +12,8 @@ function parseQuestions(text){
     var q=lines[0].replace(/^س\s*[:：]\s*/,"").replace(/^\d+[\.\)\-]\s*/,"").trim();
     var opts=[]; var ok=0;
     lines.slice(1).forEach(function(line){
-      var m=line.match(/^(?:[-*•]|[أابجدA-Da-d1-4])[\)\.\-\u060c:]\s*(.+)$/);
-      if(!m) m=line.match(/^[أبجد]\)\s*(.+)$/);
+      var m=line.match(/^[أبجدA-Da-d1-4][\)\.\u060c:]\s*(.+)$/);
+      if(!m) m=line.match(/^[-*•]\s+(?![\d٠-٩])(.+)$/);
       if(!m) return;
       var t=m[1].trim();
       var star=/\*|صحيح|√/.test(line);
@@ -26,6 +26,11 @@ function parseQuestions(text){
   return out;
 }
 function arN(n){return String(n).replace(/[0-9]/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d];});}
+function esc(s){return String(s||"").replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">");}
+function mathText(s){
+  var t=esc(s).replace(/-/g,"−").replace(/–|—/g,"−");
+  return '<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">'+t+'</span>';
+}
 function pushPoints(uid, rec, subId, sub){
   try{
     if(window.HassadFB && uid){
@@ -56,15 +61,15 @@ Hassad.startQuiz=function(assignmentId){
   const sid=assignmentId+"_"+(user&&(user.uid||user.phone)||"guest");
   var done=data.submissions[sid];
   box.style.display="block";
-  box.innerHTML='<h3 style="color:#0e5160;margin-bottom:8px">'+a.title+'</h3><div id="quiz-body"></div><p id="quiz-score"></p>';
+  box.innerHTML='<h3 style="color:#0e5160;margin-bottom:8px">'+esc(a.title)+'</h3><div id="quiz-body"></div><p id="quiz-score"></p>';
   const body=document.getElementById("quiz-body");
   const qs=a.questions||[];
   if(!qs.length){ body.innerHTML="<p>لا أسئلة في هذا الواجب</p>"; return; }
   qs.forEach(function(item,qi){
     const div=document.createElement("div");
     div.className="card"; div.style.marginBottom="10px";
-    div.innerHTML="<strong>"+arN(qi+1)+") "+item.q+"</strong><div style=\"margin-top:8px\">"+(item.opts||[]).map(function(o,oi){
-      return '<button class="qbtn" data-q="'+qi+'" data-o="'+oi+'" style="display:block;width:100%;text-align:right;margin:6px 0;padding:10px;border-radius:12px;border:1px solid #d9d0bc;background:#fff">'+o+'</button>';
+    div.innerHTML="<strong>"+arN(qi+1)+") "+mathText(item.q)+"</strong><div style=\"margin-top:8px\">"+(item.opts||[]).map(function(o,oi){
+      return '<button class="qbtn" data-q="'+qi+'" data-o="'+oi+'" style="display:block;width:100%;text-align:right;margin:6px 0;padding:10px;border-radius:12px;border:1px solid #d9d0bc;background:#fff">'+mathText(o)+'</button>';
     }).join("")+"</div>";
     body.appendChild(div);
   });

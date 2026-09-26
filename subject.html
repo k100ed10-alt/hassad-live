@@ -62,19 +62,20 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=58"></script>
-  <script src="js/fb.js?v=58"></script>
+  <script src="js/firebase-config.js?v=62"></script>
+  <script src="js/fb.js?v=62"></script>
   <script>window.Hassad=window.Hassad||{};</script>
-  <script src="js/quiz.js?v=58"></script>
+  <script src="js/quiz.js?v=62"></script>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     var myGrade=(u&&u.grade)||"";
     var playerSet=false;
+    function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
     function sameGrade(item){
       if(!item) return false;
       if(item.subject_id && item.subject_id!=="math") return false;
-      if(!myGrade || !item.grade) return !item.grade || item.grade===myGrade;
-      return item.grade===myGrade;
+      if(!myGrade || !item.grade) return false;
+      return item.grade===myGrade || cleanG(item.grade)===cleanG(myGrade);
     }
     function ytId(src){
       var m=String(src||"").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|v=)([\w-]{11})/);
@@ -93,7 +94,7 @@
         snap.forEach(function(doc){
           var m=doc.data()||{};
           if(m.subject_id && m.subject_id!=="math") return;
-          if(myGrade && m.grade && m.grade!==myGrade) return;
+          if(myGrade && m.grade && cleanG(m.grade)!==cleanG(myGrade)) return;
           rows.push(m);
         });
         rows.sort(function(a,b){return (a.at||0)-(b.at||0);});
@@ -117,7 +118,7 @@
       document.getElementById("lessons-list").innerHTML=((data.lessons||[]).filter(sameGrade).map(function(l){return "<div class='card'><strong>"+l.title+"</strong><div>"+(l.note||"")+"</div></div>";}).join(""))||"لا دروس لصفك";
       document.getElementById("hw-list").innerHTML=((data.assignments||[]).filter(sameGrade).map(function(a){
         var n=(a.questions||[]).length;
-        return "<div class='card'><strong>"+a.title+"</strong><div>"+(n?n+" أسئلة · +"+(n*10)+" نقطة":"")+"</div><button class='go' type='button' onclick=\"Hassad.startQuiz('"+a.id+"')\">ابدأ النشاط</button></div>";
+        return "<div class='card'><strong>"+a.title+"</strong><div>"+(n?n+" أسئلة · +"+(n*10)+" نقطة":"المعلم لم يضف أسئلة بعد")+"</div>"+(n?"<button class='go' type='button' onclick=\"Hassad.startQuiz('"+a.id+"')\">ابدأ النشاط</button>":"")+"</div>";
       }).join(""))||"لا واجبات لصفك";
       document.getElementById("arch-list").textContent="لا تسجيلات بعد";
     }

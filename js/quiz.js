@@ -43,9 +43,8 @@ Hassad.startQuiz=function(assignmentId){
   data.students=data.students||{};
   const sid=assignmentId+"_"+(user&&user.uid);
   const done=data.submissions[sid];
-  const img=a.image?`<img src="${a.image}" alt="" style="width:100%;border-radius:16px;margin-bottom:12px">`:"";
   box.style.display="block";
-  box.innerHTML=`<h3 style="color:#0e5160;margin-bottom:8px">${a.title}</h3>${img}<div id="quiz-body"></div><p class="hint" id="quiz-score"></p>`;
+  box.innerHTML=`<h3 style="color:#0e5160;margin-bottom:8px">${a.title}</h3><div id="quiz-body"></div><p class="hint" id="quiz-score"></p>`;
   const body=document.getElementById("quiz-body");
   const qs=a.questions||[];
   if(!qs.length){ body.innerHTML="<p>لا أسئلة بعد</p>"; return; }
@@ -69,7 +68,7 @@ Hassad.startQuiz=function(assignmentId){
       if(Object.keys(answers).length===qs.length){
         const correct=Object.values(answers).filter(Boolean).length;
         const pts=correct*10;
-        const sub={status:"submitted",score:correct,total:qs.length,points:pts};
+        const sub={status:"submitted",score:correct,total:qs.length,points:pts,name:(user&&user.name)||"طالب",grade:(user&&user.grade)||"",assignmentId:assignmentId,at:Date.now()};
         data.submissions[sid]=sub;
         if(user && user.uid){
           var rec=data.students[user.uid]||{name:user.name,email:user.email,phone:user.phone,grade:user.grade,subscription_status:"active",points:0,streak:0};

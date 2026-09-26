@@ -36,6 +36,14 @@ function pushPoints(uid, rec, subId, sub){
     }
   }catch(e){}
 }
+function markChoice(wrap, item, oi){
+  var buttons=wrap.querySelectorAll("button");
+  buttons.forEach(function(b){ b.disabled=true; });
+  var ok=Number(item.ok)||0;
+  if(buttons[ok]) buttons[ok].style.background="#e5f6ec";
+  if(oi!==ok && buttons[oi]) buttons[oi].style.background="#ffe4e8";
+  return oi===ok;
+}
 Hassad.startQuiz=function(assignmentId){
   const user=(Hassad.currentUser&&Hassad.currentUser())||JSON.parse(localStorage.getItem("hassad-user")||"null");
   const data=JSON.parse(localStorage.getItem("hassad-db")||"{}");
@@ -45,8 +53,8 @@ Hassad.startQuiz=function(assignmentId){
   if(!a){alert("الواجب غير موجود");return;}
   data.submissions=data.submissions||{};
   data.students=data.students||{};
-  const sid=assignmentId+"_"+(user&&user.uid);
-  const done=data.submissions[sid];
+  const sid=assignmentId+"_"+(user&&(user.uid||user.phone)||"guest");
+  var done=data.submissions[sid];
   box.style.display="block";
   box.innerHTML='<h3 style="color:#0e5160;margin-bottom:8px">'+a.title+'</h3><div id="quiz-body"></div><p id="quiz-score"></p>';
   const body=document.getElementById("quiz-body");
@@ -60,17 +68,26 @@ Hassad.startQuiz=function(assignmentId){
     }).join("")+"</div>";
     body.appendChild(div);
   });
-  if(done) document.getElementById("quiz-score").textContent="سُجِّل: "+arN(done.score||0)+" من "+arN(done.total||qs.length);
+  if(done){
+    document.getElementById("quiz-score").textContent="سُجِّل: "+arN(done.score||0)+" من "+arN(done.total||qs.length)+" — يمكنك المراجعة بدون نقاط جديدة";
+    body.querySelectorAll(".card").forEach(function(card,qi){
+      var item=qs[qi]; if(!item) return;
+      var wrap=card.querySelector("div");
+      var buttons=wrap.querySelectorAll("button");
+      if(buttons[item.ok||0]) buttons[item.ok||0].style.background="#e5f6ec";
+    });
+  }
   const answers={};
   body.querySelectorAll(".qbtn").forEach(function(btn){
     btn.onclick=function(){
-      if(done) return;
       const qi=+btn.dataset.q, oi=+btn.dataset.o;
       const item=qs[qi];
       const wrap=btn.parentElement;
-      wrap.querySelectorAll("button").forEach(function(b){b.disabled=true;});
-      if(oi===item.ok){btn.style.background="#e5f6ec";answers[qi]=true;}
-      else {btn.style.background="#ffe4e8";answers[qi]=false; if(wrap.querySelectorAll("button")[item.ok]) wrap.querySelectorAll("button")[item.ok].style.background="#e5f6ec";}
+      if(wrap.getAttribute("data-locked")) return;
+      wrap.setAttribute("data-locked","1");
+      var good=markChoice(wrap, item, oi);
+      answers[qi]=good;
+      if(done) return;
       if(Object.keys(answers).length===qs.length){
         const correct=Object.values(answers).filter(Boolean).length;
         const pts=correct*10;

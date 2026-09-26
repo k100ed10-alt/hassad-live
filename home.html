@@ -54,7 +54,7 @@
     </div>
     <button class="bell" id="bell-btn" type="button" onclick="enableBell()">فعّل تنبيه الحصة قبل ٢٠ دقيقة</button>
     <div class="soon" id="soon"></div>
-    <div class="week"><strong>حصص الأسبوع</strong><div id="week"></div></div>
+    <div class="week"><strong>حصص صفك</strong><div id="week"></div></div>
     <div class="subs">
       <a class="sub" href="subject.html?id=math"><strong>الرياضيات</strong><div>مفتوحة الآن</div></a>
     </div>
@@ -63,11 +63,20 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=57"></script>
-  <script src="js/fb.js?v=57"></script>
+  <script src="js/firebase-config.js?v=62"></script>
+  <script src="js/fb.js?v=62"></script>
   <script>
     function out(){ localStorage.removeItem("hassad-user"); location.href="login.html"; }
     function ar(n){return String(n).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]});}
+    function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
+    function phoneMatch(a,b){ var x=digits(a), y=digits(b); return x&&y&&(x===y||x.slice(-8)===y.slice(-8)); }
+    function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
+    function sameGrade(item, grade){
+      if(!item) return false;
+      if(item.subject_id && item.subject_id!=="math") return false;
+      if(!grade || !item.grade) return false;
+      return item.grade===grade || cleanG(item.grade)===cleanG(grade);
+    }
     function sessionAt(s){
       if(s && s.scheduled_at){ var t=Date.parse(s.scheduled_at); if(!isNaN(t)) return t; }
       return 0;
@@ -91,11 +100,11 @@
         if(localStorage.getItem(key)) return;
         if(warn<=now && now<at){
           localStorage.setItem(key,"1");
-          ping("الحصة بعد قليل", (s.title||"حصة الرياضيات")+" · "+(s.scheduled_time||""));
+          ping("الحصة بعد قليل", (s.title||"حصة")+" · "+(s.scheduled_time||""));
         } else if(warn>now && warn-now<36*60*60*1000){
           setTimeout(function(){
             localStorage.setItem(key,"1");
-            ping("بعد ٢٠ دقيقة حصة", (s.title||"حصة الرياضيات")+" · "+(s.scheduled_time||""));
+            ping("بعد ٢٠ دقيقة حصة", (s.title||"حصة")+" · "+(s.scheduled_time||""));
           }, warn-now);
         }
       });
@@ -124,7 +133,16 @@
       }
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
       data.students=data.students||{};
-      var rec=u && data.students[u.uid];
+      if(u && !u.grade){
+        Object.keys(data.students).forEach(function(id){
+          var s=data.students[id];
+          if(s && (id===u.uid || phoneMatch(s.phone,u.phone) || s.email===u.email) && s.grade){
+            u.grade=s.grade; u.name=u.name||s.name;
+            localStorage.setItem("hassad-user", JSON.stringify(u));
+          }
+        });
+      }
+      var rec=u && (data.students[u.uid] || Object.keys(data.students).map(function(id){return data.students[id];}).find(function(s){return s && phoneMatch(s.phone,u.phone);}));
       var myPts=rec?Number(rec.points)||0:0, myStreak=rec?Number(rec.streak)||0:0;
       if(u){ document.getElementById("hi").textContent="مرحباً "+(u.name||""); document.getElementById("gr").textContent=u.grade||""; }
       document.getElementById("pts").textContent="★ "+ar(myPts)+" نقطة";
@@ -133,18 +151,18 @@
       var board=[];
       Object.keys(data.students).forEach(function(id){
         var s=data.students[id]; if(!s||!s.name) return;
-        if(grade && s.grade && s.grade!==grade) return;
-        board.push({name:s.name,pts:Number(s.points)||0,me:u&&(id===u.uid||s.email===u.email||s.phone===u.phone)});
+        if(!sameGrade({grade:s.grade,subject_id:"math"}, grade)) return;
+        board.push({name:s.name,pts:Number(s.points)||0,me:u&&(id===u.uid||s.email===u.email||phoneMatch(s.phone,u.phone))});
       });
       if(u && !board.some(function(r){return r.me})) board.push({name:u.name,pts:myPts,me:true});
       board.sort(function(a,b){return b.pts-a.pts});
       document.getElementById("board").innerHTML=board.slice(0,8).map(function(r,i){
         return '<div class="rank '+(i===0?"gold":"")+(r.me?" me":"")+'"><span style="display:flex;gap:8px;align-items:center"><b>'+ar(i+1)+'</b> '+r.name+(r.me?" (أنت)":"")+'</span><span>★ '+ar(r.pts)+'</span></div>';
       }).join("") || '<div class="slot">لا نقاط بعد</div>';
-      var sessions=(data.live_sessions||[]).filter(function(s){return (!s.subject_id||s.subject_id==="math") && (!grade||!s.grade||s.grade===grade);});
-      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+(s.scheduled_time?" — "+s.scheduled_time:"")+'</div>';}).join(""):'<div class="slot">لا حصص هذا الأسبوع</div>';
-      var hws=(data.assignments||[]).filter(function(a){return (!a.subject_id||a.subject_id==="math") && (!grade||!a.grade||a.grade===grade);});
-      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id=math">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات جديدة</div>';
+      var sessions=(data.live_sessions||[]).filter(function(s){return sameGrade(s, grade);});
+      document.getElementById("week").innerHTML=sessions.length?sessions.map(function(s){return '<div class="slot">'+s.title+(s.scheduled_time?" — "+s.scheduled_time:"")+'</div>';}).join(""):'<div class="slot">لا حصص لصفك هذا الأسبوع</div>';
+      var hws=(data.assignments||[]).filter(function(a){return sameGrade(a, grade);});
+      document.getElementById("hw").innerHTML=hws.length?hws.map(function(a){return '<div class="slot"><a href="subject.html?id=math">'+a.title+'</a></div>';}).join(""):'<div class="slot">لا واجبات لصفك</div>';
       scheduleBells(sessions);
     }
     paint();

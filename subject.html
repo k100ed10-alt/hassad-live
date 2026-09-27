@@ -27,6 +27,7 @@
     .row button{background:#c9a227;border:0;border-radius:999px;padding:12px 16px;font-weight:800;color:#06262e}
     .card{background:#fff;border-radius:16px;padding:14px;margin-top:10px;border:1px solid #e4d9bf}
     .go{margin-top:8px;background:#0e5160;color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800}
+    .lock{color:#8a3b12;background:#fff3c4;border-radius:12px;padding:10px;margin-top:10px;font-weight:700;font-size:14px}
   </style>
 </head>
 <body>
@@ -47,10 +48,11 @@
     <div class="chat">
       <strong>اسأل المعلم</strong>
       <div id="bubbles"></div>
-      <div class="row">
+      <div class="row" id="chat-row">
         <input id="chat-text" placeholder="اكتب سؤالك">
         <button type="button" onclick="send()">إرسال</button>
       </div>
+      <div class="lock" id="chat-lock" hidden>السؤال للمشتركين فقط</div>
     </div>
   </section>
   <section id="lessons" class="card" hidden><div id="lessons-list"></div></section>
@@ -62,14 +64,39 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=62"></script>
-  <script src="js/fb.js?v=62"></script>
+  <script src="js/firebase-config.js?v=69"></script>
+  <script src="js/fb.js?v=69"></script>
   <script>window.Hassad=window.Hassad||{};</script>
-  <script src="js/quiz.js?v=62"></script>
+  <script src="js/quiz.js?v=69"></script>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+    if(!u) location.href="login.html";
     var myGrade=(u&&u.grade)||"";
     var playerSet=false;
+    function digits(s){return String(s||"").replace(/[^0-9]/g,"");}
+    function phoneMatch(a,b){ var x=digits(a), y=digits(b); return x&&y&&(x===y||x.slice(-8)===y.slice(-8)); }
+    function studentRec(){
+      var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
+      var students=data.students||{};
+      if(u && students[u.uid]) return students[u.uid];
+      var found=null;
+      Object.keys(students).forEach(function(id){
+        var s=students[id];
+        if(s && u && (phoneMatch(s.phone,u.phone)||s.email===u.email)) found=s;
+      });
+      return found||{};
+    }
+    function isSubscribed(){
+      if(!u || u.role==="admin" || u.role==="teacher") return false;
+      var rec=studentRec();
+      var st=String(rec.subscription_status||u.subscription_status||"").toLowerCase();
+      return st==="active" || st==="مشترك" || st==="1" || st==="true";
+    }
+    function gateChat(){
+      var ok=isSubscribed();
+      document.getElementById("chat-row").hidden=!ok;
+      document.getElementById("chat-lock").hidden=ok;
+    }
     function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
     function sameGrade(item){
       if(!item) return false;
@@ -85,7 +112,7 @@
       document.getElementById("bubbles").innerHTML=rows.map(function(m){
         return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>'
           +(m.reply?'<div class="reply"><b>المعلم</b> '+m.reply+'</div>':'');
-      }).join("")||'<div class="bubble">اكتب سؤالك للمعلم</div>';
+      }).join("")||'<div class="bubble">'+(isSubscribed()?"اكتب سؤالك للمعلم":"السؤال للمشتركين فقط")+'</div>';
     }
     function loadChat(){
       if(!HassadFB.db) return;
@@ -102,6 +129,7 @@
       });
     }
     function fill(){
+      gateChat();
       var data={}; try{data=JSON.parse(localStorage.getItem("hassad-db")||"{}")}catch(e){}
       var lives=(data.live_sessions||[]).filter(sameGrade);
       var live=lives.find(function(s){return s.stream_url && s.status!=="completed";}) || lives.find(function(s){return s.stream_url;});
@@ -123,8 +151,10 @@
       document.getElementById("arch-list").textContent="لا تسجيلات بعد";
     }
     function send(){
+      if(!isSubscribed()){ gateChat(); return; }
       var t=document.getElementById("chat-text"); var text=(t.value||"").trim(); if(!text) return;
-      var msg={id:"m"+Date.now(),subject_id:"math",grade:myGrade,name:(u&&u.name)||"طالب",text:text,at:Date.now()};
+      var rec=studentRec();
+      var msg={id:"m"+Date.now(),subject_id:"math",grade:myGrade,name:(u&&u.name)||"طالب",uid:(u&&u.uid)||"",phone:(u&&u.phone)||rec.phone||"",text:text,at:Date.now(),sub:true};
       t.value=""; HassadFB.put("messages", msg.id, msg).then(loadChat);
     }
     fill();

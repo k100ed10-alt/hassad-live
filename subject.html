@@ -48,11 +48,18 @@
     <div class="chat">
       <strong>اسأل المعلم</strong>
       <div id="bubbles"></div>
-      <div class="row" id="chat-row">
+      <div class="row" id="chat-row" hidden>
         <input id="chat-text" placeholder="اكتب سؤالك">
         <button type="button" onclick="send()">إرسال</button>
       </div>
-      <div class="lock" id="chat-lock" hidden>السؤال للمشتركين فقط</div>
+      <div class="lock" id="chat-lock">
+        بعد الدفع أدخل رمز الاشتراك لتسأل
+        <div class="row">
+          <input id="ask-code" dir="ltr" placeholder="HS-XXXX">
+          <button type="button" onclick="redeem()">تفعيل</button>
+        </div>
+        <div id="ask-msg"></div>
+      </div>
     </div>
   </section>
   <section id="lessons" class="card" hidden><div id="lessons-list"></div></section>
@@ -64,10 +71,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js?v=69"></script>
-  <script src="js/fb.js?v=69"></script>
+  <script src="js/firebase-config.js?v=70"></script>
+  <script src="js/fb.js?v=70"></script>
   <script>window.Hassad=window.Hassad||{};</script>
-  <script src="js/quiz.js?v=69"></script>
+  <script src="js/quiz.js?v=70"></script>
+  <script src="js/pass.js?v=70"></script>
   <script>
     var u=null; try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
     if(!u) location.href="login.html";
@@ -89,13 +97,22 @@
     function isSubscribed(){
       if(!u || u.role==="admin" || u.role==="teacher") return false;
       var rec=studentRec();
-      var st=String(rec.subscription_status||u.subscription_status||"").toLowerCase();
-      return st==="active" || st==="مشترك" || st==="1" || st==="true";
+      return !!(u.askCode || rec.askCode);
     }
     function gateChat(){
       var ok=isSubscribed();
       document.getElementById("chat-row").hidden=!ok;
       document.getElementById("chat-lock").hidden=ok;
+    }
+    function redeem(){
+      var msg=document.getElementById("ask-msg");
+      var code=(document.getElementById("ask-code").value||"").trim();
+      msg.textContent="جارٍ التفعيل...";
+      Hassad.redeemAskCode(code).then(function(){
+        msg.textContent="تم التفعيل. يمكنك السؤال الآن";
+        try{u=JSON.parse(localStorage.getItem("hassad-user")||"null")}catch(e){}
+        gateChat();
+      }).catch(function(e){ msg.textContent=(e&&e.message)||"رمز غير صالح"; });
     }
     function cleanG(g){ return String(g||"").replace(/الصف\s*/g,"").replace(/\s+/g,"").trim(); }
     function sameGrade(item){
@@ -112,7 +129,7 @@
       document.getElementById("bubbles").innerHTML=rows.map(function(m){
         return '<div class="bubble"><b>'+(m.name||"")+'</b> '+(m.text||"")+'</div>'
           +(m.reply?'<div class="reply"><b>المعلم</b> '+m.reply+'</div>':'');
-      }).join("")||'<div class="bubble">'+(isSubscribed()?"اكتب سؤالك للمعلم":"السؤال للمشتركين فقط")+'</div>';
+      }).join("")||'<div class="bubble">'+(isSubscribed()?"اكتب سؤالك للمعلم":"أدخل رمز الاشتراك بعد الدفع")+'</div>';
     }
     function loadChat(){
       if(!HassadFB.db) return;
